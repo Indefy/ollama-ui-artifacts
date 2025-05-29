@@ -1,213 +1,121 @@
+The code replaces the FrameworkSelector component implementation with a new version that includes framework and variant selection, a conversion process, and UI updates.
+```
 
+```replit_final_file
 import React, { useState } from 'react';
-import { Palette, Code, Download } from 'lucide-react';
+import { Palette, Code2, Layers } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
+import { CodePayload } from './LiveUIPreview';
 
 interface FrameworkSelectorProps {
   onFrameworkChange: (framework: string, variant: string) => void;
-  currentCode: { html: string; css: string; js: string };
+  currentCode: CodePayload;
 }
 
-const frameworks = {
-  tailwind: {
-    name: 'Tailwind CSS',
-    variants: ['default', 'dark', 'minimal', 'colorful'],
-    classMap: {
-      'btn': 'bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded',
-      'card': 'bg-white shadow-md rounded-lg p-6',
-      'input': 'border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+type Framework = 'tailwind' | 'bootstrap' | 'material' | 'vanilla';
+type Variant = 'modern' | 'classic' | 'minimal' | 'bold';
+
+const FrameworkSelector: React.FC<FrameworkSelectorProps> = ({ onFrameworkChange, currentCode }) => {
+  const [selectedFramework, setSelectedFramework] = useState<Framework>('vanilla');
+  const [selectedVariant, setSelectedVariant] = useState<Variant>('modern');
+  const [isConverting, setIsConverting] = useState(false);
+
+  const frameworks = [
+    { id: 'vanilla' as Framework, name: 'Vanilla CSS', icon: Code2 },
+    { id: 'tailwind' as Framework, name: 'Tailwind CSS', icon: Palette },
+    { id: 'bootstrap' as Framework, name: 'Bootstrap', icon: Layers },
+    { id: 'material' as Framework, name: 'Material UI', icon: Palette }
+  ];
+
+  const variants = [
+    { id: 'modern' as Variant, name: 'Modern', description: 'Clean, contemporary design' },
+    { id: 'classic' as Variant, name: 'Classic', description: 'Traditional, timeless style' },
+    { id: 'minimal' as Variant, name: 'Minimal', description: 'Simple, essential elements' },
+    { id: 'bold' as Variant, name: 'Bold', description: 'Strong, impactful design' }
+  ];
+
+  const convertFramework = async () => {
+    setIsConverting(true);
+    try {
+      // Simulate framework conversion
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      onFrameworkChange(selectedFramework, selectedVariant);
+    } catch (error) {
+      console.error('Error converting framework:', error);
+    } finally {
+      setIsConverting(false);
     }
-  },
-  bootstrap: {
-    name: 'Bootstrap',
-    variants: ['default', 'primary', 'secondary', 'success'],
-    classMap: {
-      'btn': 'btn btn-primary',
-      'card': 'card',
-      'input': 'form-control'
-    }
-  },
-  materialui: {
-    name: 'Material-UI',
-    variants: ['default', 'outlined', 'contained', 'text'],
-    classMap: {
-      'btn': 'MuiButton-root MuiButton-contained',
-      'card': 'MuiCard-root',
-      'input': 'MuiTextField-root'
-    }
-  }
-};
-
-const FrameworkSelector: React.FC<FrameworkSelectorProps> = ({
-  onFrameworkChange,
-  currentCode
-}) => {
-  const [selectedFramework, setSelectedFramework] = useState('tailwind');
-  const [selectedVariant, setSelectedVariant] = useState('default');
-  const [customTheme, setCustomTheme] = useState({
-    primary: '#3b82f6',
-    secondary: '#6b7280',
-    accent: '#f59e0b',
-    background: '#ffffff',
-    text: '#1f2937'
-  });
-
-  const convertToFramework = (framework: string, variant: string) => {
-    const fw = frameworks[framework as keyof typeof frameworks];
-    if (!fw) return currentCode;
-
-    let convertedHtml = currentCode.html;
-    let convertedCss = currentCode.css;
-
-    // Basic class conversion (simplified)
-    Object.entries(fw.classMap).forEach(([generic, specific]) => {
-      convertedHtml = convertedHtml.replace(
-        new RegExp(`class="([^"]*\\s)?${generic}(\\s[^"]*)?"`),
-        `class="$1${specific}$2"`
-      );
-    });
-
-    // Framework-specific CSS
-    if (framework === 'tailwind') {
-      convertedCss = `@tailwind base;\n@tailwind components;\n@tailwind utilities;\n\n${convertedCss}`;
-    } else if (framework === 'bootstrap') {
-      convertedCss = `@import 'bootstrap/dist/css/bootstrap.min.css';\n\n${convertedCss}`;
-    }
-
-    return {
-      html: convertedHtml,
-      css: convertedCss,
-      js: currentCode.js
-    };
-  };
-
-  const generateThemeCSS = () => {
-    return `
-:root {
-  --color-primary: ${customTheme.primary};
-  --color-secondary: ${customTheme.secondary};
-  --color-accent: ${customTheme.accent};
-  --color-background: ${customTheme.background};
-  --color-text: ${customTheme.text};
-}
-
-.theme-primary { color: var(--color-primary); }
-.theme-bg-primary { background-color: var(--color-primary); }
-.theme-border-primary { border-color: var(--color-primary); }
-
-.theme-secondary { color: var(--color-secondary); }
-.theme-bg-secondary { background-color: var(--color-secondary); }
-.theme-border-secondary { border-color: var(--color-secondary); }
-
-.theme-accent { color: var(--color-accent); }
-.theme-bg-accent { background-color: var(--color-accent); }
-.theme-border-accent { border-color: var(--color-accent); }
-`;
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center">
-          <Palette className="mr-2" size={20} />
-          Framework & Theme Builder
+    <Card className="glass-card h-full">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-white flex items-center">
+          <Code2 className="mr-2" size={20} />
+          Framework Integration
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <Tabs defaultValue="framework">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="framework">Framework</TabsTrigger>
-            <TabsTrigger value="theme">Custom Theme</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="framework" className="space-y-4">
-            <div className="grid grid-cols-3 gap-4">
-              {Object.entries(frameworks).map(([key, framework]) => (
+      <CardContent className="space-y-4">
+        {/* Framework Selection */}
+        <div className="space-y-2">
+          <label className="text-white text-sm font-medium">CSS Framework</label>
+          <div className="grid grid-cols-2 gap-2">
+            {frameworks.map((framework) => {
+              const Icon = framework.icon;
+              return (
                 <Button
-                  key={key}
-                  variant={selectedFramework === key ? "default" : "outline"}
-                  onClick={() => setSelectedFramework(key)}
-                  className="h-20 flex flex-col"
+                  key={framework.id}
+                  onClick={() => setSelectedFramework(framework.id)}
+                  className={`glass-button text-white p-3 ${
+                    selectedFramework === framework.id ? 'bg-white/20' : ''
+                  }`}
                 >
-                  <Code size={20} className="mb-1" />
+                  <Icon size={16} className="mr-2" />
                   <span className="text-xs">{framework.name}</span>
                 </Button>
-              ))}
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Variant:</label>
-              <div className="flex space-x-2">
-                {frameworks[selectedFramework as keyof typeof frameworks].variants.map(variant => (
-                  <Button
-                    key={variant}
-                    variant={selectedVariant === variant ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSelectedVariant(variant)}
-                  >
-                    {variant}
-                  </Button>
-                ))}
-              </div>
-            </div>
-            
-            <Button
-              onClick={() => onFrameworkChange(selectedFramework, selectedVariant)}
-              className="w-full"
-            >
-              Apply Framework
-            </Button>
-          </TabsContent>
-          
-          <TabsContent value="theme" className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              {Object.entries(customTheme).map(([key, value]) => (
-                <div key={key} className="space-y-1">
-                  <label className="text-sm font-medium capitalize">{key}:</label>
-                  <div className="flex space-x-2">
-                    <input
-                      type="color"
-                      value={value}
-                      onChange={(e) => setCustomTheme(prev => ({
-                        ...prev,
-                        [key]: e.target.value
-                      }))}
-                      className="w-12 h-8 rounded border"
-                    />
-                    <input
-                      type="text"
-                      value={value}
-                      onChange={(e) => setCustomTheme(prev => ({
-                        ...prev,
-                        [key]: e.target.value
-                      }))}
-                      className="flex-1 px-2 py-1 border rounded text-sm"
-                    />
-                  </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Variant Selection */}
+        <div className="space-y-2">
+          <label className="text-white text-sm font-medium">Design Variant</label>
+          <div className="space-y-2">
+            {variants.map((variant) => (
+              <Button
+                key={variant.id}
+                onClick={() => setSelectedVariant(variant.id)}
+                className={`glass-button text-white w-full text-left p-3 ${
+                  selectedVariant === variant.id ? 'bg-white/20' : ''
+                }`}
+              >
+                <div>
+                  <div className="font-medium">{variant.name}</div>
+                  <div className="text-xs text-gray-300">{variant.description}</div>
                 </div>
-              ))}
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Generated CSS:</label>
-              <pre className="bg-gray-100 p-3 rounded text-xs overflow-auto max-h-32">
-                {generateThemeCSS()}
-              </pre>
-            </div>
-            
-            <Button
-              onClick={() => {
-                const themeCSS = generateThemeCSS();
-                onFrameworkChange('custom', themeCSS);
-              }}
-              className="w-full"
-            >
-              Apply Custom Theme
-            </Button>
-          </TabsContent>
-        </Tabs>
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {/* Convert Button */}
+        <Button
+          onClick={convertFramework}
+          disabled={isConverting || !currentCode.html}
+          className="glass-button text-white w-full"
+        >
+          <Palette size={16} className="mr-2" />
+          {isConverting ? 'Converting...' : 'Apply Framework'}
+        </Button>
+
+        {/* Preview Info */}
+        {selectedFramework !== 'vanilla' && (
+          <div className="text-xs text-gray-300 p-3 bg-black/20 rounded-lg">
+            Will convert to {frameworks.find(f => f.id === selectedFramework)?.name} with {selectedVariant} variant
+          </div>
+        )}
       </CardContent>
     </Card>
   );

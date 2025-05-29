@@ -7,6 +7,8 @@ import ComponentLibrary from './components/ComponentLibrary';
 import MultiStepGenerator from './components/MultiStepGenerator';
 import FrameworkSelector from './components/FrameworkSelector';
 import ResponsiveDesigner from './components/ResponsiveDesigner';
+import ComponentVariations from './components/ComponentVariations';
+import ThemeBuilder from './components/ThemeBuilder';
 
 function App() {
   const [currentCode, setCurrentCode] = useState<CodePayload>({
@@ -31,10 +33,12 @@ p {
     js: ''
   });
   const [componentName, setComponentName] = useState<string>('MyComponent');
+  const [lastPrompt, setLastPrompt] = useState<string>('');
 
-  const handleGenerateCode = (html: string, css: string, js: string) => {
+  const handleGenerateCode = (html: string, css: string, js: string, prompt?: string) => {
     setCurrentCode({ html, css, js });
     setComponentName('GeneratedComponent');
+    if (prompt) setLastPrompt(prompt);
   };
 
   const handleTemplateSelect = (code: CodePayload) => {
@@ -79,22 +83,40 @@ p {
         {/* Advanced AI Tools */}
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
           <MultiStepGenerator 
-            onGenerateCode={handleGenerateCode}
+            onGenerateCode={(html, css, js) => handleGenerateCode(html, css, js)}
             selectedModel="llama3.2:latest"
           />
           <FrameworkSelector 
             onFrameworkChange={(framework, variant) => {
-              // Handle framework conversion
               console.log('Framework change:', framework, variant);
             }}
             currentCode={currentCode}
           />
           <ResponsiveDesigner 
             onResponsiveChange={(breakpoints) => {
-              // Handle responsive changes
               console.log('Responsive changes:', breakpoints);
             }}
             currentCode={currentCode}
+          />
+        </div>
+
+        {/* Component Variations */}
+        {lastPrompt && (
+          <div className="mb-8">
+            <ComponentVariations
+              onSelectVariation={(code) => setCurrentCode(code)}
+              basePrompt={lastPrompt}
+              selectedModel="llama3.2:latest"
+            />
+          </div>
+        )}
+
+        {/* Theme Builder */}
+        <div className="mb-8">
+          <ThemeBuilder
+            onThemeChange={(theme) => {
+              console.log('Theme changed:', theme);
+            }}
           />
         </div>
 
