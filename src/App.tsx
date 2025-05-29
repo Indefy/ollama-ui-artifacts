@@ -1,4 +1,17 @@
+
 import React, { useState } from 'react';
+import { 
+  MessageSquare, 
+  Eye, 
+  Code2, 
+  Download, 
+  Settings, 
+  Menu, 
+  X,
+  Sparkles,
+  Monitor,
+  Palette
+} from 'lucide-react';
 import { CodePayload } from './components/LiveUIPreview';
 import LiveUIPreview from './components/LiveUIPreview';
 import ChatInterface from './components/ChatInterface';
@@ -9,6 +22,16 @@ import FrameworkSelector from './components/FrameworkSelector';
 import ResponsiveDesigner from './components/ResponsiveDesigner';
 import ComponentVariations from './components/ComponentVariations';
 import ThemeBuilder from './components/ThemeBuilder';
+import { Button } from './components/ui/button';
+
+type TabId = 'chat' | 'preview' | 'editor' | 'export' | 'settings' | 'library' | 'tools';
+
+interface Tab {
+  id: TabId;
+  label: string;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  component: React.ReactNode;
+}
 
 function App() {
   const [currentCode, setCurrentCode] = useState<CodePayload>({
@@ -34,58 +57,98 @@ p {
   });
   const [componentName, setComponentName] = useState<string>('MyComponent');
   const [lastPrompt, setLastPrompt] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<TabId>('chat');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [codeEditorTab, setCodeEditorTab] = useState<'html' | 'css' | 'js'>('html');
 
   const handleGenerateCode = (html: string, css: string, js: string, prompt?: string) => {
     setCurrentCode({ html, css, js });
     setComponentName('GeneratedComponent');
     if (prompt) setLastPrompt(prompt);
+    // Auto-switch to preview tab when code is generated
+    setActiveTab('preview');
   };
 
   const handleTemplateSelect = (code: CodePayload) => {
     setCurrentCode(code);
     setComponentName('TemplateComponent');
+    setActiveTab('preview');
   };
 
-  return (
-    <div className="min-h-screen animated-bg p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Enhanced Header */}
-        <header className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2 bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
-            PocketAI Canvas
-          </h1>
-          <p className="text-blue-100 text-lg opacity-90">
-            Generate • Preview • Export Beautiful UI Components
-          </p>
-        </header>
-        
-        {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <div className="h-[700px]">
-            <ChatInterface onGenerateCode={handleGenerateCode} />
-          </div>
-          
-          <div className="h-[700px]">
-            <LiveUIPreview
-              initialHtml={currentCode.html}
-              initialCss={currentCode.css}
-              initialJs={currentCode.js}
-              onCodeChange={setCurrentCode}
-            />
-          </div>
-        </div>
+  const handleCodeChange = (code: CodePayload) => {
+    setCurrentCode(code);
+  };
 
-        {/* Component Library */}
-        <div className="mb-8">
-          <ComponentLibrary onSelectTemplate={handleTemplateSelect} />
+  // Code Editor Component
+  const CodeEditor = () => (
+    <div className="h-full flex flex-col">
+      <div className="p-4 border-b border-white/20 bg-gradient-to-r from-green-500/20 to-blue-500/20">
+        <h2 className="text-lg font-medium text-white flex items-center mb-3">
+          <Code2 size={18} className="mr-2 text-green-300" />
+          Code Editor
+        </h2>
+        <div className="flex space-x-2">
+          {(['html', 'css', 'js'] as const).map((tab) => (
+            <Button
+              key={tab}
+              onClick={() => setCodeEditorTab(tab)}
+              className={`glass-button text-white text-sm ${
+                codeEditorTab === tab ? 'bg-white/20' : ''
+              }`}
+            >
+              {tab.toUpperCase()}
+            </Button>
+          ))}
         </div>
+      </div>
+      <div className="flex-1 p-4 bg-black/30">
+        <textarea
+          value={
+            codeEditorTab === 'html' ? currentCode.html :
+            codeEditorTab === 'css' ? currentCode.css : currentCode.js
+          }
+          onChange={(e) => {
+            const newCode = {
+              ...currentCode,
+              [codeEditorTab]: e.target.value
+            };
+            setCurrentCode(newCode);
+            handleCodeChange(newCode);
+          }}
+          className="w-full h-full code-editor resize-none border border-white/20 rounded-lg p-4 focus:outline-none focus:ring-2 focus:ring-blue-400/50"
+          placeholder={`Enter ${codeEditorTab.toUpperCase()} code here...`}
+          spellCheck={false}
+        />
+      </div>
+    </div>
+  );
 
-        {/* Advanced AI Tools */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
+  // Advanced Tools Component
+  const AdvancedTools = () => (
+    <div className="h-full p-4 space-y-6 overflow-y-auto">
+      <div className="glass-card">
+        <div className="p-4 border-b border-white/20">
+          <h2 className="text-lg font-medium text-white flex items-center">
+            <Sparkles size={18} className="mr-2 text-purple-300" />
+            AI Tools
+          </h2>
+        </div>
+        <div className="p-4 space-y-4">
           <MultiStepGenerator 
             onGenerateCode={(html, css, js) => handleGenerateCode(html, css, js)}
             selectedModel="llama3.2:latest"
           />
+        </div>
+      </div>
+
+      <div className="glass-card">
+        <div className="p-4 border-b border-white/20">
+          <h2 className="text-lg font-medium text-white flex items-center">
+            <Monitor size={18} className="mr-2 text-blue-300" />
+            Framework & Responsive
+          </h2>
+        </div>
+        <div className="p-4 space-y-4">
           <FrameworkSelector 
             onFrameworkChange={(framework, variant) => {
               console.log('Framework change:', framework, variant);
@@ -99,40 +162,186 @@ p {
             currentCode={currentCode}
           />
         </div>
+      </div>
 
-        {/* Component Variations */}
-        {lastPrompt && (
-          <div className="mb-8">
-            <ComponentVariations
-              onSelectVariation={(code) => setCurrentCode(code)}
-              basePrompt={lastPrompt}
-              selectedModel="llama3.2:latest"
-            />
-          </div>
-        )}
-
-        {/* Theme Builder */}
-        <div className="mb-8">
+      <div className="glass-card">
+        <div className="p-4 border-b border-white/20">
+          <h2 className="text-lg font-medium text-white flex items-center">
+            <Palette size={18} className="mr-2 text-pink-300" />
+            Theme Builder
+          </h2>
+        </div>
+        <div className="p-4">
           <ThemeBuilder
             onThemeChange={(theme) => {
               console.log('Theme changed:', theme);
             }}
           />
         </div>
+      </div>
 
-        {/* Code Export Section */}
-        <div className="mb-8">
-          <CodeExport code={currentCode} componentName={componentName} />
-        </div>
-        
-        {/* Enhanced Footer */}
-        <footer className="text-center py-6">
-          <div className="glass-card inline-block px-6 py-3">
-            <p className="text-white text-sm opacity-80">
-              Interactive Component Canvas for PocketAI Chat © 2025
-            </p>
+      {lastPrompt && (
+        <div className="glass-card">
+          <div className="p-4 border-b border-white/20">
+            <h2 className="text-lg font-medium text-white">Component Variations</h2>
           </div>
-        </footer>
+          <div className="p-4">
+            <ComponentVariations
+              onSelectVariation={(code) => setCurrentCode(code)}
+              basePrompt={lastPrompt}
+              selectedModel="llama3.2:latest"
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  const tabs: Tab[] = [
+    {
+      id: 'chat',
+      label: 'Chat',
+      icon: MessageSquare,
+      component: <ChatInterface onGenerateCode={handleGenerateCode} />
+    },
+    {
+      id: 'preview',
+      label: 'Preview',
+      icon: Eye,
+      component: (
+        <LiveUIPreview
+          initialHtml={currentCode.html}
+          initialCss={currentCode.css}
+          initialJs={currentCode.js}
+          onCodeChange={handleCodeChange}
+        />
+      )
+    },
+    {
+      id: 'editor',
+      label: 'Editor',
+      icon: Code2,
+      component: <CodeEditor />
+    },
+    {
+      id: 'library',
+      label: 'Library',
+      icon: Monitor,
+      component: <ComponentLibrary onSelectTemplate={handleTemplateSelect} />
+    },
+    {
+      id: 'tools',
+      label: 'Tools',
+      icon: Sparkles,
+      component: <AdvancedTools />
+    },
+    {
+      id: 'export',
+      label: 'Export',
+      icon: Download,
+      component: <CodeExport code={currentCode} componentName={componentName} />
+    }
+  ];
+
+  const activeTabData = tabs.find(tab => tab.id === activeTab);
+
+  return (
+    <div className="h-screen animated-bg flex overflow-hidden">
+      {/* Mobile sidebar overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <div className={`
+        fixed lg:static inset-y-0 left-0 z-50 w-64 glass-card border-r border-white/20
+        transform transition-transform duration-300 ease-in-out
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `}>
+        {/* Header */}
+        <div className="p-4 border-b border-white/20 bg-gradient-to-r from-white/10 to-blue-200/10">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-xl font-bold text-white bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
+                PocketAI Canvas
+              </h1>
+              <p className="text-xs text-blue-100 opacity-75">
+                Generate • Preview • Export
+              </p>
+            </div>
+            <Button
+              onClick={() => setSidebarOpen(false)}
+              className="lg:hidden glass-button text-white p-2"
+            >
+              <X size={16} />
+            </Button>
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 p-4">
+          <div className="space-y-2">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    setActiveTab(tab.id);
+                    setSidebarOpen(false);
+                  }}
+                  className={`
+                    w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-lg
+                    transition-all duration-200 group
+                    ${activeTab === tab.id 
+                      ? 'bg-white/20 text-white shadow-lg' 
+                      : 'text-white/70 hover:text-white hover:bg-white/10'
+                    }
+                  `}
+                >
+                  <Icon size={18} className={`mr-3 ${
+                    activeTab === tab.id ? 'text-blue-300' : 'text-white/50 group-hover:text-white/70'
+                  }`} />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        </nav>
+
+        {/* Footer */}
+        <div className="p-4 border-t border-white/20">
+          <div className="text-xs text-white/50 text-center">
+            Interactive Component Canvas © 2025
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Mobile header */}
+        <div className="lg:hidden p-4 border-b border-white/20 bg-gradient-to-r from-white/10 to-blue-200/10">
+          <div className="flex items-center justify-between">
+            <Button
+              onClick={() => setSidebarOpen(true)}
+              className="glass-button text-white p-2"
+            >
+              <Menu size={16} />
+            </Button>
+            <h2 className="text-lg font-medium text-white">
+              {activeTabData?.label}
+            </h2>
+            <div className="w-8" /> {/* Spacer */}
+          </div>
+        </div>
+
+        {/* Tab content */}
+        <div className="flex-1 overflow-hidden">
+          {activeTabData?.component}
+        </div>
       </div>
     </div>
   );
