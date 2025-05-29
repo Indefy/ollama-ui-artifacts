@@ -1,4 +1,5 @@
 import { CodePayload } from '@/components/LiveUIPreview';
+import { formatCodeWithPrettier, analyzeAndOptimizeCode } from './codeOptimizer';
 
 /**
  * Generates UI code based on user prompts by calling the Ollama API
@@ -67,11 +68,21 @@ Ensure the JSON itself is valid. Ensure the HTML, CSS, and JavaScript are comple
       const jsonStr = jsonMatch[0];
       const parsedResponse = JSON.parse(jsonStr);
       
-      return {
-        html: parsedResponse.html?.trim() || '',
-        css: parsedResponse.css?.trim() || '',
-        js: parsedResponse.js?.trim() || '',
+      // Auto-format the generated code
+      const formattedCode = {
+        html: formatCodeWithPrettier(parsedResponse.html?.trim() || '', 'html'),
+        css: formatCodeWithPrettier(parsedResponse.css?.trim() || '', 'css'),
+        js: formatCodeWithPrettier(parsedResponse.js?.trim() || '', 'babel'),
       };
+
+      // Optionally analyze and optimize
+      try {
+        const optimized = await analyzeAndOptimizeCode(formattedCode, modelName);
+        return optimized.optimizedCode;
+      } catch (optimizationError) {
+        console.warn('Code optimization failed, returning formatted code:', optimizationError);
+        return formattedCode;
+      }
     } catch (parseError) {
       console.error('Error parsing LLM response:', parseError);
       console.debug('Raw LLM response:', data.response);

@@ -4,6 +4,9 @@ import LiveUIPreview from './components/LiveUIPreview';
 import ChatInterface from './components/ChatInterface';
 import CodeExport from './components/CodeExport';
 import ComponentLibrary from './components/ComponentLibrary';
+import MultiStepGenerator from './components/MultiStepGenerator';
+import FrameworkSelector from './components/FrameworkSelector';
+import ResponsiveDesigner from './components/ResponsiveDesigner';
 
 function App() {
   const [currentCode, setCurrentCode] = useState<CodePayload>({
@@ -71,6 +74,28 @@ p {
         {/* Component Library */}
         <div className="mb-8">
           <ComponentLibrary onSelectTemplate={handleTemplateSelect} />
+        </div>
+
+        {/* Advanced AI Tools */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
+          <MultiStepGenerator 
+            onGenerateCode={handleGenerateCode}
+            selectedModel="llama3.2:latest"
+          />
+          <FrameworkSelector 
+            onFrameworkChange={(framework, variant) => {
+              // Handle framework conversion
+              console.log('Framework change:', framework, variant);
+            }}
+            currentCode={currentCode}
+          />
+          <ResponsiveDesigner 
+            onResponsiveChange={(breakpoints) => {
+              // Handle responsive changes
+              console.log('Responsive changes:', breakpoints);
+            }}
+            currentCode={currentCode}
+          />
         </div>
 
         {/* Code Export Section */}
