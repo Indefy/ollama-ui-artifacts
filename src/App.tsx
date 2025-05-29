@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   MessageSquare, 
@@ -10,7 +9,10 @@ import {
   X,
   Sparkles,
   Monitor,
-  Palette
+  Palette,
+  FolderOpen,
+  MousePointer,
+  Brain
 } from 'lucide-react';
 import { CodePayload } from './components/LiveUIPreview';
 import LiveUIPreview from './components/LiveUIPreview';
@@ -23,8 +25,13 @@ import ResponsiveDesigner from './components/ResponsiveDesigner';
 import ComponentVariations from './components/ComponentVariations';
 import ThemeBuilder from './components/ThemeBuilder';
 import { Button } from './components/ui/button';
+import { AuthProvider, LoginButton } from './components/Auth';
+import ProjectSystem from './components/ProjectSystem';
+import DragDropEditor from './components/DragDropEditor';
+import NaturalLanguageBuilder from './components/NaturalLanguageBuilder';
+import AIMemorySystem from './components/AIMemorySystem';
 
-type TabId = 'chat' | 'preview' | 'editor' | 'export' | 'settings' | 'library' | 'tools';
+type TabId = 'chat' | 'preview' | 'editor' | 'export' | 'settings' | 'library' | 'tools' | 'projects' | 'visual' | 'ai-builder';
 
 interface Tab {
   id: TabId;
@@ -240,110 +247,148 @@ p {
       label: 'Export',
       icon: Download,
       component: <CodeExport code={currentCode} componentName={componentName} />
+    },
+    { 
+      id: 'projects', 
+      label: 'Projects', 
+      icon: FolderOpen, 
+      component: null 
+    },
+    { 
+      id: 'visual', 
+      label: 'Visual Editor', 
+      icon: MousePointer, 
+      component: null 
+    },
+    { 
+      id: 'ai-builder', 
+      label: 'AI Builder', 
+      icon: Brain, 
+      component: null 
     }
   ];
 
   const activeTabData = tabs.find(tab => tab.id === activeTab);
 
   return (
-    <div className="h-screen animated-bg flex overflow-hidden">
-      {/* Mobile sidebar overlay */}
-      {sidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+    <AuthProvider>
+      <div className="h-screen animated-bg flex overflow-hidden">
+        {/* Mobile sidebar overlay */}
+        {sidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
 
-      {/* Sidebar */}
-      <div className={`
-        fixed lg:static inset-y-0 left-0 z-50 w-64 glass-card border-r border-white/20
-        transform transition-transform duration-300 ease-in-out
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-      `}>
-        {/* Header */}
-        <div className="p-4 border-b border-white/20 bg-gradient-to-r from-white/10 to-blue-200/10">
-          <div className="flex items-center justify-between">
-            <div>
+        {/* Sidebar */}
+        <div className={`
+          fixed lg:static inset-y-0 left-0 z-50 w-64 glass-card border-r border-white/20
+          transform transition-transform duration-300 ease-in-out
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        `}>
+          {/* Header */}
+          <div className="p-4 border-b border-white/20 bg-gradient-to-r from-white/10 to-blue-200/10">
+            <div className="flex items-center justify-between w-full">
               <h1 className="text-xl font-bold text-white bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
                 PocketAI Canvas
               </h1>
-              <p className="text-xs text-blue-100 opacity-75">
-                Generate • Preview • Export
-              </p>
+              <LoginButton />
             </div>
-            <Button
-              onClick={() => setSidebarOpen(false)}
-              className="lg:hidden glass-button text-white p-2"
-            >
-              <X size={16} />
-            </Button>
+          </div>
+
+          {/* Navigation */}
+          <nav className="flex-1 p-4">
+            <div className="space-y-2">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => {
+                      setActiveTab(tab.id);
+                      setSidebarOpen(false);
+                    }}
+                    className={`
+                      w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-lg
+                      transition-all duration-200 group
+                      ${activeTab === tab.id 
+                        ? 'bg-white/20 text-white shadow-lg' 
+                        : 'text-white/70 hover:text-white hover:bg-white/10'
+                      }
+                    `}
+                  >
+                    <Icon size={18} className={`mr-3 ${
+                      activeTab === tab.id ? 'text-blue-300' : 'text-white/50 group-hover:text-white/70'
+                    }`} />
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+          </nav>
+
+          {/* Footer */}
+          <div className="p-4 border-t border-white/20">
+            <div className="text-xs text-white/50 text-center">
+              Interactive Component Canvas © 2025
+            </div>
           </div>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 p-4">
-          <div className="space-y-2">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => {
-                    setActiveTab(tab.id);
-                    setSidebarOpen(false);
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Mobile header */}
+          <div className="lg:hidden p-4 border-b border-white/20 bg-gradient-to-r from-white/10 to-blue-200/10">
+            <div className="flex items-center justify-between">
+              <Button
+                onClick={() => setSidebarOpen(true)}
+                className="glass-button text-white p-2"
+              >
+                <Menu size={16} />
+              </Button>
+              <h2 className="text-lg font-medium text-white">
+                {activeTabData?.label}
+              </h2>
+              <div className="w-8" /> {/* Spacer */}
+            </div>
+          </div>
+
+          {/* Tab content */}
+          <div className="flex-1 overflow-hidden">
+            {activeTabData?.component}
+            {activeTab === 'tools' && <AdvancedTools />}
+            {activeTab === 'projects' && (
+              <ProjectSystem 
+                currentComponent={currentCode}
+                onLoadComponent={(component) => handleGenerateCode(component.code.html, component.code.css, component.code.js)}
+              />
+            )}
+            {activeTab === 'visual' && (
+              <DragDropEditor 
+                onCodeGenerate={(code) => handleGenerateCode(code.html, code.css, code.js)}
+              />
+            )}
+            {activeTab === 'ai-builder' && (
+              <div className="h-full p-4 space-y-6 overflow-y-auto">
+                <NaturalLanguageBuilder 
+                  onProjectGenerated={(components) => {
+                    // Handle project generation - could integrate with project system
+                    console.log('Generated project components:', components);
                   }}
-                  className={`
-                    w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-lg
-                    transition-all duration-200 group
-                    ${activeTab === tab.id 
-                      ? 'bg-white/20 text-white shadow-lg' 
-                      : 'text-white/70 hover:text-white hover:bg-white/10'
-                    }
-                  `}
-                >
-                  <Icon size={18} className={`mr-3 ${
-                    activeTab === tab.id ? 'text-blue-300' : 'text-white/50 group-hover:text-white/70'
-                  }`} />
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
-        </nav>
-
-        {/* Footer */}
-        <div className="p-4 border-t border-white/20">
-          <div className="text-xs text-white/50 text-center">
-            Interactive Component Canvas © 2025
+                  selectedModel="llama3.2:latest"
+                />
+                <AIMemorySystem 
+                  currentCode={currentCode}
+                  onCodeUpdate={(code) => handleGenerateCode(code.html, code.css, code.js)}
+                  selectedModel="llama3.2:latest"
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Mobile header */}
-        <div className="lg:hidden p-4 border-b border-white/20 bg-gradient-to-r from-white/10 to-blue-200/10">
-          <div className="flex items-center justify-between">
-            <Button
-              onClick={() => setSidebarOpen(true)}
-              className="glass-button text-white p-2"
-            >
-              <Menu size={16} />
-            </Button>
-            <h2 className="text-lg font-medium text-white">
-              {activeTabData?.label}
-            </h2>
-            <div className="w-8" /> {/* Spacer */}
-          </div>
-        </div>
-
-        {/* Tab content */}
-        <div className="flex-1 overflow-hidden">
-          {activeTabData?.component}
-        </div>
-      </div>
-    </div>
+    </AuthProvider>
   );
 }
 
