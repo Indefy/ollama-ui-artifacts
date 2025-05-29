@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ChevronRight, ChevronLeft, Layers, Shuffle, Sparkles } from 'lucide-react';
 import { Button } from './ui/button';
@@ -19,152 +18,6 @@ interface MultiStepGeneratorProps {
   selectedModel: string;
 }
 
-const MultiStepGenerator: React.FC<MultiStepGeneratorProps> = ({ onGenerateCode, selectedModel }) => {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [steps, setSteps] = useState<GenerationStep[]>([
-    {
-      id: '1',
-      title: 'Layout Structure',
-      description: 'Define the basic layout and structure',
-      prompt: '',
-      completed: false
-    },
-    {
-      id: '2',
-      title: 'Visual Design',
-      description: 'Apply colors, typography, and styling',
-      prompt: '',
-      completed: false
-    },
-    {
-      id: '3',
-      title: 'Interactions',
-      description: 'Add JavaScript functionality and animations',
-      prompt: '',
-      completed: false
-    }
-  ]);
-
-  const handleStepPromptChange = (stepIndex: number, prompt: string) => {
-    const newSteps = [...steps];
-    newSteps[stepIndex].prompt = prompt;
-    setSteps(newSteps);
-  };
-
-  const generateStep = async (stepIndex: number) => {
-    setIsGenerating(true);
-    try {
-      const step = steps[stepIndex];
-      const code = await generateUICode(step.prompt, selectedModel);
-      
-      const newSteps = [...steps];
-      newSteps[stepIndex].completed = true;
-      setSteps(newSteps);
-      
-      onGenerateCode(code.html, code.css, code.js);
-    } catch (error) {
-      console.error('Error generating step:', error);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const nextStep = () => {
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
-    }
-  };
-
-  const prevStep = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
-
-  return (
-    <Card className="glass-card h-full">
-      <CardHeader className="pb-4">
-        <CardTitle className="text-white flex items-center">
-          <Layers className="mr-2" size={20} />
-          Multi-Step Generator
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Progress Indicator */}
-        <div className="flex items-center space-x-2 mb-4">
-          {steps.map((step, index) => (
-            <div key={step.id} className="flex items-center">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
-                index === currentStep ? 'bg-blue-500 text-white' :
-                step.completed ? 'bg-green-500 text-white' :
-                'bg-gray-600 text-gray-300'
-              }`}>
-                {index + 1}
-              </div>
-              {index < steps.length - 1 && (
-                <ChevronRight size={16} className="text-gray-400 mx-1" />
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* Current Step */}
-        <div className="space-y-3">
-          <h3 className="text-white font-medium">{steps[currentStep].title}</h3>
-          <p className="text-gray-300 text-sm">{steps[currentStep].description}</p>
-          
-          <textarea
-            className="w-full h-24 glass-input text-white placeholder-gray-400 resize-none"
-            placeholder={`Describe the ${steps[currentStep].title.toLowerCase()}...`}
-            value={steps[currentStep].prompt}
-            onChange={(e) => handleStepPromptChange(currentStep, e.target.value)}
-          />
-
-          <div className="flex space-x-2">
-            <Button
-              onClick={() => generateStep(currentStep)}
-              disabled={isGenerating || !steps[currentStep].prompt.trim()}
-              className="glass-button text-white flex-1"
-            >
-              <Sparkles size={16} className="mr-1" />
-              {isGenerating ? 'Generating...' : 'Generate Step'}
-            </Button>
-          </div>
-        </div>
-
-        {/* Navigation */}
-        <div className="flex justify-between pt-4">
-          <Button
-            onClick={prevStep}
-            disabled={currentStep === 0}
-            className="glass-button text-white"
-          >
-            <ChevronLeft size={16} className="mr-1" />
-            Previous
-          </Button>
-          
-          <Button
-            onClick={nextStep}
-            disabled={currentStep === steps.length - 1}
-            className="glass-button text-white"
-          >
-            Next
-            <ChevronRight size={16} className="ml-1" />
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
-
-export default MultiStepGenerator;
-
-interface MultiStepGeneratorProps {
-  onGenerateCode: (html: string, css: string, js: string) => void;
-  selectedModel: string;
-}
-
 const MultiStepGenerator: React.FC<MultiStepGeneratorProps> = ({
   onGenerateCode,
   selectedModel
@@ -173,7 +26,7 @@ const MultiStepGenerator: React.FC<MultiStepGeneratorProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [variations, setVariations] = useState<CodePayload[]>([]);
   const [selectedVariation, setSelectedVariation] = useState<number | null>(null);
-  
+
   const [steps, setSteps] = useState<GenerationStep[]>([
     {
       id: 'structure',
@@ -314,7 +167,7 @@ const MultiStepGenerator: React.FC<MultiStepGeneratorProps> = ({
             <ChevronLeft size={16} className="mr-1" />
             Previous
           </Button>
-          
+
           {currentStep === steps.length - 1 ? (
             <Button
               onClick={generateVariations}

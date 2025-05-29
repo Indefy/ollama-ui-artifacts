@@ -1,7 +1,4 @@
-The code replaces the FrameworkSelector component implementation with a new version that includes framework and variant selection, a conversion process, and UI updates.
-```
 
-```replit_final_file
 import React, { useState } from 'react';
 import { Palette, Code2, Layers } from 'lucide-react';
 import { Button } from './ui/button';
