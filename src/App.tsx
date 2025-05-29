@@ -3,6 +3,7 @@ import { CodePayload } from './components/LiveUIPreview';
 import LiveUIPreview from './components/LiveUIPreview';
 import ChatInterface from './components/ChatInterface';
 import CodeExport from './components/CodeExport';
+import ComponentLibrary from './components/ComponentLibrary';
 
 function App() {
   const [currentCode, setCurrentCode] = useState<CodePayload>({
@@ -33,34 +34,59 @@ p {
     setComponentName('GeneratedComponent');
   };
 
+  const handleTemplateSelect = (code: CodePayload) => {
+    setCurrentCode(code);
+    setComponentName('TemplateComponent');
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100 p-4 md:p-8">
-      <h1 className="text-2xl font-bold text-center mb-6 text-gray-800">
-        PocketAI Chat - Interactive Component Canvas
-      </h1>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-7xl mx-auto">
-        <div className="h-[600px]">
-          <ChatInterface onGenerateCode={handleGenerateCode} />
+    <div className="min-h-screen animated-bg p-4 md:p-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Enhanced Header */}
+        <header className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-white mb-2 bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
+            PocketAI Canvas
+          </h1>
+          <p className="text-blue-100 text-lg opacity-90">
+            Generate • Preview • Export Beautiful UI Components
+          </p>
+        </header>
+        
+        {/* Main Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div className="h-[700px]">
+            <ChatInterface onGenerateCode={handleGenerateCode} />
+          </div>
+          
+          <div className="h-[700px]">
+            <LiveUIPreview
+              initialHtml={currentCode.html}
+              initialCss={currentCode.css}
+              initialJs={currentCode.js}
+              onCodeChange={setCurrentCode}
+            />
+          </div>
+        </div>
+
+        {/* Component Library */}
+        <div className="mb-8">
+          <ComponentLibrary onSelectTemplate={handleTemplateSelect} />
+        </div>
+
+        {/* Code Export Section */}
+        <div className="mb-8">
+          <CodeExport code={currentCode} componentName={componentName} />
         </div>
         
-        <div className="h-[600px]">
-          <LiveUIPreview
-            initialHtml={currentCode.html}
-            initialCss={currentCode.css}
-            initialJs={currentCode.js}
-            onCodeChange={setCurrentCode}
-          />
-        </div>
+        {/* Enhanced Footer */}
+        <footer className="text-center py-6">
+          <div className="glass-card inline-block px-6 py-3">
+            <p className="text-white text-sm opacity-80">
+              Interactive Component Canvas for PocketAI Chat © 2025
+            </p>
+          </div>
+        </footer>
       </div>
-
-      <div className="max-w-7xl mx-auto mt-6">
-        <CodeExport code={currentCode} componentName={componentName} />
-      </div>
-      
-      <footer className="mt-8 text-center text-sm text-gray-500">
-        <p>Interactive Component Canvas for PocketAI Chat © 2025</p>
-      </footer>
     </div>
   );
 }

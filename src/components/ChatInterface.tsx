@@ -109,29 +109,29 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onGenerateCode }) => {
   };
 
   return (
-    <div className="flex flex-col h-full border rounded-lg bg-white shadow-sm">
-      <div className="p-4 border-b bg-gray-50 flex justify-between items-center">
-        <h2 className="text-lg font-medium flex items-center">
-          <Sparkles size={18} className="mr-2 text-blue-500" />
+    <div className="flex flex-col h-full glass-card overflow-hidden">
+      <div className="p-4 border-b border-white/20 flex justify-between items-center bg-gradient-to-r from-blue-500/20 to-purple-500/20">
+        <h2 className="text-lg font-medium flex items-center text-white">
+          <Sparkles size={18} className="mr-2 text-blue-300 animate-pulse" />
           PocketAI Chat
         </h2>
         <div className="flex items-center space-x-2">
-          <Cpu size={16} className="text-gray-600" />
+          <Cpu size={16} className="text-blue-200" />
           <select 
             value={selectedModel} 
             onChange={handleModelChange}
             disabled={isProcessing}
-            className="p-1.5 border border-gray-300 rounded-md text-sm bg-white focus:ring-blue-500 focus:border-blue-500"
+            className="p-2 glass-button text-white text-sm rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
             aria-label="Select AI Model"
           >
             {AVAILABLE_MODELS.map(model => (
-              <option key={model} value={model}>{model}</option>
+              <option key={model} value={model} className="bg-gray-800 text-white">{model}</option>
             ))}
           </select>
         </div>
       </div>
       
-      <div className="flex-grow overflow-y-auto p-4 space-y-4">
+      <div className="flex-grow overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
         {messages.map((message) => (
           <MessageItem 
             key={message.id} 
@@ -143,29 +143,39 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onGenerateCode }) => {
             }}
           />
         ))}
+        {isProcessing && (
+          <div className="flex items-center space-x-2 text-blue-200">
+            <div className="flex space-x-1">
+              <div className="w-2 h-2 bg-blue-400 rounded-full pulse-dots"></div>
+              <div className="w-2 h-2 bg-blue-400 rounded-full pulse-dots" style={{animationDelay: '0.2s'}}></div>
+              <div className="w-2 h-2 bg-blue-400 rounded-full pulse-dots" style={{animationDelay: '0.4s'}}></div>
+            </div>
+            <span className="text-sm">AI is generating...</span>
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
       
-      <div className="p-4 border-t">
-        <div className="flex items-start space-x-2">
+      <div className="p-4 border-t border-white/20">
+        <div className="flex items-start space-x-3">
           <Textarea
             value={inputValue}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            placeholder="Ask me to create a UI component..."
-            className="resize-none min-h-[60px]"
+            placeholder="Describe the UI component you want to create..."
+            className="resize-none min-h-[60px] glass-button text-white placeholder-blue-200 border-white/20 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/50"
             disabled={isProcessing}
           />
           <Button 
             onClick={handleSubmit} 
             disabled={inputValue.trim() === '' || isProcessing}
-            className="h-full"
+            className="h-full glass-button hover:bg-blue-500/30 text-white border-white/20 glow-effect"
           >
             <Send size={18} />
           </Button>
         </div>
-        <p className="text-xs text-gray-500 mt-2">
-          Press Enter to send. Shift+Enter for new line.
+        <p className="text-xs text-blue-200 mt-2 opacity-70">
+          Press Enter to send • Shift+Enter for new line
         </p>
       </div>
     </div>
