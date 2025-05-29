@@ -290,3 +290,5 @@ export const DragDropEditor: React.FC<DragDropEditorProps> = ({ onCodeGenerate }
     </div>
   );
 };
+
+export default DragDropEditor;

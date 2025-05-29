@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Palette, Type, Layers, Download, Copy } from 'lucide-react';
 import { Button } from './ui/button';
@@ -162,21 +161,21 @@ const ThemeBuilder: React.FC<ThemeBuilderProps> = ({ onThemeChange }) => {
   --color-surface: ${theme.colors.surface};
   --color-text: ${theme.colors.text};
   --color-text-secondary: ${theme.colors.textSecondary};
-  
+
   /* Typography */
   --font-heading: ${theme.typography.headingFont};
   --font-body: ${theme.typography.bodyFont};
   --size-heading: ${theme.typography.headingSize};
   --size-body: ${theme.typography.bodySize};
   --line-height: ${theme.typography.lineHeight};
-  
+
   /* Spacing */
   --space-xs: ${theme.spacing.xs};
   --space-sm: ${theme.spacing.sm};
   --space-md: ${theme.spacing.md};
   --space-lg: ${theme.spacing.lg};
   --space-xl: ${theme.spacing.xl};
-  
+
   /* Layout */
   --border-radius: ${theme.borderRadius};
   --box-shadow: ${theme.shadows ? '0 4px 6px -1px rgba(0, 0, 0, 0.1)' : 'none'};
@@ -395,4 +394,4 @@ h1, h2, h3, h4, h5, h6 {
   );
 };
 
-export default ThemeBuilder;
+export { ThemeBuilder as default } from './theme/ThemeBuilder';

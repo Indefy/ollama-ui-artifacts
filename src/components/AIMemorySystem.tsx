@@ -1,2 +1,2 @@
 
-export { default } from './ai/AIMemorySystem';
+export { AIMemorySystem as default } from './ai/AIMemorySystem';

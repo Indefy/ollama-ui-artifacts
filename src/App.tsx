@@ -26,8 +26,8 @@ import ComponentVariations from './components/ComponentVariations';
 import ThemeBuilder from './components/ThemeBuilder';
 import { Button } from './components/ui/button';
 import { AuthProvider, LoginButton } from './components/Auth';
-import ProjectSystem from './components/ProjectSystem';
-import DragDropEditor from './components/DragDropEditor';
+import ProjectSystem from "./components/ProjectSystem";
+import DragDropEditor from "./components/DragDropEditor";
 import NaturalLanguageBuilder from './components/NaturalLanguageBuilder';
 import AIMemorySystem from './components/AIMemorySystem';
 

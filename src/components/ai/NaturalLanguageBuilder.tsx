@@ -239,3 +239,5 @@ export const NaturalLanguageBuilder: React.FC<NaturalLanguageBuilderProps> = ({
     </Card>
   );
 };
+
+export default NaturalLanguageBuilder;

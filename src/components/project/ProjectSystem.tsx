@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Folder, Plus, Save, Download, Upload, Trash2, Star, StarOff } from 'lucide-react';
 import { Button } from '../ui/button';
@@ -294,3 +293,6 @@ export const ProjectSystem: React.FC<ProjectSystemProps> = ({
     </div>
   );
 };
+
+export { ProjectSystem };
+export default ProjectSystem;

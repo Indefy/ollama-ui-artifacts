@@ -37,3 +37,5 @@ export const LoginButton: React.FC = () => {
     </Button>
   );
 };
+
+export default LoginButton;

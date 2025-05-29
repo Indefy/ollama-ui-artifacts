@@ -290,3 +290,5 @@ export const AIMemorySystem: React.FC<AIMemorySystemProps> = ({
     </Card>
   );
 };
+
+export default AIMemorySystem;
