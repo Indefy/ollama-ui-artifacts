@@ -17,14 +17,15 @@ interface ResponsiveBreakpoints {
 
 type Device = 'mobile' | 'tablet' | 'desktop';
 
-const ResponsiveDesigner: React.FC<ResponsiveDesignerProps> = ({ onResponsiveChange, currentCode }) => {
+const ResponsiveDesigner: React.FC<ResponsiveDesignerProps> = ({
+  breakpoints,
+  onBreakpointsChange,
+  currentCode = { html: '', css: '', js: '' },
+  onResponsiveChange
+}) => {
   const [activeDevice, setActiveDevice] = useState<Device>('desktop');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [breakpoints, setBreakpoints] = useState<ResponsiveBreakpoints>({
-    mobile: '320px',
-    tablet: '768px',
-    desktop: '1024px'
-  });
+  const [localBreakpoints, setLocalBreakpoints] = useState(breakpoints);
 
   const devices = [
     { id: 'mobile' as Device, name: 'Mobile', icon: Smartphone, width: '375px' },
@@ -32,9 +33,13 @@ const ResponsiveDesigner: React.FC<ResponsiveDesignerProps> = ({ onResponsiveCha
     { id: 'desktop' as Device, name: 'Desktop', icon: Monitor, width: '1024px' }
   ];
 
-  const handleBreakpointChange = (device: Device, value: string) => {
-    const newBreakpoints = { ...breakpoints, [device]: value };
-    setBreakpoints(newBreakpoints);
+  const handleBreakpointChange = (device: string, value: string) => {
+    const newBreakpoints = { ...localBreakpoints, [device]: value };
+    setLocalBreakpoints(newBreakpoints);
+    onBreakpointsChange(newBreakpoints);
+    if (onResponsiveChange) {
+      onResponsiveChange(newBreakpoints);
+    }
   };
 
   const generateResponsiveCSS = async () => {
@@ -42,7 +47,7 @@ const ResponsiveDesigner: React.FC<ResponsiveDesignerProps> = ({ onResponsiveCha
     try {
       // Simulate responsive CSS generation
       await new Promise(resolve => setTimeout(resolve, 1500));
-      onResponsiveChange(breakpoints);
+      onResponsiveChange(localBreakpoints);
     } catch (error) {
       console.error('Error generating responsive CSS:', error);
     } finally {
@@ -86,7 +91,21 @@ const ResponsiveDesigner: React.FC<ResponsiveDesignerProps> = ({ onResponsiveCha
               <label className="text-gray-300 text-xs">{device.name} ({device.icon.name})</label>
               <input
                 type="text"
-                value={breakpoints[device.id]}
+                value={localBreakpoints.mobile}
+                onChange={(e) => handleBreakpointChange(device.id, e.target.value)}
+                className="w-full glass-input text-white placeholder-gray-400"
+                placeholder={`${device.width}`}
+              />
+              <input
+                type="text"
+                value={localBreakpoints.tablet}
+                onChange={(e) => handleBreakpointChange(device.id, e.target.value)}
+                className="w-full glass-input text-white placeholder-gray-400"
+                placeholder={`${device.width}`}
+              />
+              <input
+                type="text"
+                value={localBreakpoints.desktop}
                 onChange={(e) => handleBreakpointChange(device.id, e.target.value)}
                 className="w-full glass-input text-white placeholder-gray-400"
                 placeholder={`${device.width}`}
@@ -101,14 +120,14 @@ const ResponsiveDesigner: React.FC<ResponsiveDesignerProps> = ({ onResponsiveCha
             Active: {devices.find(d => d.id === activeDevice)?.name}
           </div>
           <div className="text-gray-300 text-xs">
-            Breakpoint: {breakpoints[activeDevice]}
+            Breakpoint: {localBreakpoints[activeDevice]}
           </div>
         </div>
 
         {/* Generate Button */}
         <Button
           onClick={generateResponsiveCSS}
-          disabled={isGenerating || !currentCode.html}
+          disabled={isGenerating || !currentCode || !currentCode.html}
           className="glass-button text-white w-full"
         >
           <Settings size={16} className="mr-2" />

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Shuffle, Copy, Download, Eye } from 'lucide-react';
 import { Button } from './ui/button';
@@ -55,7 +54,7 @@ const ComponentVariations: React.FC<ComponentVariationsProps> = ({
     for (let i = 0; i < variationStyles.length; i++) {
       const style = variationStyles[i];
       const enhancedPrompt = `${basePrompt}. Style: ${style.name} - ${style.description}`;
-      
+
       try {
         const code = await generateUICode(enhancedPrompt, selectedModel);
         setVariations(prev => prev.map((variation, index) => 

@@ -168,6 +168,8 @@ function App() {
           <ResponsiveDesigner 
             breakpoints={responsiveBreakpoints}
             onBreakpointsChange={setResponsiveBreakpoints}
+            currentCode={currentCode}
+            onResponsiveChange={setResponsiveBreakpoints}
           />
           <ComponentVariations 
             currentCode={currentCode}
