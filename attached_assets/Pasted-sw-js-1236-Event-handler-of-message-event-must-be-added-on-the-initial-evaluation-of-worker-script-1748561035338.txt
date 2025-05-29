@@ -1,0 +1,110 @@
+sw.js:1236 Event handler of 'message' event must be added on the initial evaluation of worker script.
+listenSynchronize @ sw.js:1236
+Unchecked runtime.lastError: The page keeping the extension port is moved into back/forward cache, so the message channel is closed.
+Unchecked runtime.lastError: The page keeping the extension port is moved into back/forward cache, so the message channel is closed.
+Unchecked runtime.lastError: The page keeping the extension port is moved into back/forward cache, so the message channel is closed.
+Unchecked runtime.lastError: The page keeping the extension port is moved into back/forward cache, so the message channel is closed.
+Unchecked runtime.lastError: The page keeping the extension port is moved into back/forward cache, so the message channel is closed.
+Unchecked runtime.lastError: The page keeping the extension port is moved into back/forward cache, so the message channel is closed.
+Unchecked runtime.lastError: The page keeping the extension port is moved into back/forward cache, so the message channel is closed.
+Unchecked runtime.lastError: The page keeping the extension port is moved into back/forward cache, so the message channel is closed.
+Unchecked runtime.lastError: The page keeping the extension port is moved into back/forward cache, so the message channel is closed.
+Unchecked runtime.lastError: The page keeping the extension port is moved into back/forward cache, so the message channel is closed.
+Unchecked runtime.lastError: The page keeping the extension port is moved into back/forward cache, so the message channel is closed.
+Unchecked runtime.lastError: The page keeping the extension port is moved into back/forward cache, so the message channel is closed.
+Unchecked runtime.lastError: The page keeping the extension port is moved into back/forward cache, so the message channel is closed.
+Unchecked runtime.lastError: The page keeping the extension port is moved into back/forward cache, so the message channel is closed.
+Unchecked runtime.lastError: The page keeping the extension port is moved into back/forward cache, so the message channel is closed.
+Unchecked runtime.lastError: The page keeping the extension port is moved into back/forward cache, so the message channel is closed.
+Unchecked runtime.lastError: The page keeping the extension port is moved into back/forward cache, so the message channel is closed.
+Unchecked runtime.lastError: The page keeping the extension port is moved into back/forward cache, so the message channel is closed.
+Unchecked runtime.lastError: The page keeping the extension port is moved into back/forward cache, so the message channel is closed.
+Unchecked runtime.lastError: The page keeping the extension port is moved into back/forward cache, so the message channel is closed.
+host-console-events.js:1 Iframe loaded successfully
+content.js:1 Content script loaded
+host-console-events.js:1 Iframe loaded successfully
+ResponsiveDesigner.tsx:111 Uncaught TypeError: Cannot read properties of undefined (reading 'html')
+    at ResponsiveDesigner (ResponsiveDesigner.tsx:111:50)
+    at renderWithHooks (chunk-M7F2YF5A.js?v=645835d7:11548:26)
+    at mountIndeterminateComponent (chunk-M7F2YF5A.js?v=645835d7:14926:21)
+    at beginWork (chunk-M7F2YF5A.js?v=645835d7:15914:22)
+    at HTMLUnknownElement.callCallback2 (chunk-M7F2YF5A.js?v=645835d7:3674:22)
+    at Object.invokeGuardedCallbackDev (chunk-M7F2YF5A.js?v=645835d7:3699:24)
+    at invokeGuardedCallback (chunk-M7F2YF5A.js?v=645835d7:3733:39)
+    at beginWork$1 (chunk-M7F2YF5A.js?v=645835d7:19765:15)
+    at performUnitOfWork (chunk-M7F2YF5A.js?v=645835d7:19198:20)
+    at workLoopSync (chunk-M7F2YF5A.js?v=645835d7:19137:13)
+ComponentVariations.tsx:98 Uncaught TypeError: Cannot read properties of undefined (reading 'trim')
+    at ComponentVariations (ComponentVariations.tsx:98:49)
+    at renderWithHooks (chunk-M7F2YF5A.js?v=645835d7:11548:26)
+    at mountIndeterminateComponent (chunk-M7F2YF5A.js?v=645835d7:14926:21)
+    at beginWork (chunk-M7F2YF5A.js?v=645835d7:15914:22)
+    at HTMLUnknownElement.callCallback2 (chunk-M7F2YF5A.js?v=645835d7:3674:22)
+    at Object.invokeGuardedCallbackDev (chunk-M7F2YF5A.js?v=645835d7:3699:24)
+    at invokeGuardedCallback (chunk-M7F2YF5A.js?v=645835d7:3733:39)
+    at beginWork$1 (chunk-M7F2YF5A.js?v=645835d7:19765:15)
+    at performUnitOfWork (chunk-M7F2YF5A.js?v=645835d7:19198:20)
+    at workLoopSync (chunk-M7F2YF5A.js?v=645835d7:19137:13)
+ResponsiveDesigner.tsx:111 Uncaught TypeError: Cannot read properties of undefined (reading 'html')
+    at ResponsiveDesigner (ResponsiveDesigner.tsx:111:50)
+    at renderWithHooks (chunk-M7F2YF5A.js?v=645835d7:11548:26)
+    at mountIndeterminateComponent (chunk-M7F2YF5A.js?v=645835d7:14926:21)
+    at beginWork (chunk-M7F2YF5A.js?v=645835d7:15914:22)
+    at HTMLUnknownElement.callCallback2 (chunk-M7F2YF5A.js?v=645835d7:3674:22)
+    at Object.invokeGuardedCallbackDev (chunk-M7F2YF5A.js?v=645835d7:3699:24)
+    at invokeGuardedCallback (chunk-M7F2YF5A.js?v=645835d7:3733:39)
+    at beginWork$1 (chunk-M7F2YF5A.js?v=645835d7:19765:15)
+    at performUnitOfWork (chunk-M7F2YF5A.js?v=645835d7:19198:20)
+    at workLoopSync (chunk-M7F2YF5A.js?v=645835d7:19137:13)
+ComponentVariations.tsx:98 Uncaught TypeError: Cannot read properties of undefined (reading 'trim')
+    at ComponentVariations (ComponentVariations.tsx:98:49)
+    at renderWithHooks (chunk-M7F2YF5A.js?v=645835d7:11548:26)
+    at mountIndeterminateComponent (chunk-M7F2YF5A.js?v=645835d7:14926:21)
+    at beginWork (chunk-M7F2YF5A.js?v=645835d7:15914:22)
+    at HTMLUnknownElement.callCallback2 (chunk-M7F2YF5A.js?v=645835d7:3674:22)
+    at Object.invokeGuardedCallbackDev (chunk-M7F2YF5A.js?v=645835d7:3699:24)
+    at invokeGuardedCallback (chunk-M7F2YF5A.js?v=645835d7:3733:39)
+    at beginWork$1 (chunk-M7F2YF5A.js?v=645835d7:19765:15)
+    at performUnitOfWork (chunk-M7F2YF5A.js?v=645835d7:19198:20)
+    at workLoopSync (chunk-M7F2YF5A.js?v=645835d7:19137:13)
+hook.js:608 The above error occurred in the <ResponsiveDesigner> component:
+
+    at ResponsiveDesigner (http://localhost:5173/@fs/D:/projects/ollama-ui-artifacts/main/src/components/ResponsiveDesigner.tsx:22:31)
+    at div
+    at div
+    at div
+    at div
+    at div
+    at div
+    at AuthProvider (http://localhost:5173/@fs/D:/projects/ollama-ui-artifacts/main/src/components/auth/AuthProvider.tsx:29:32)
+    at App (http://localhost:5173/@fs/D:/projects/ollama-ui-artifacts/main/src/App.tsx:49:37)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+overrideMethod @ hook.js:608
+hook.js:608 The above error occurred in the <ComponentVariations> component:
+
+    at ComponentVariations (http://localhost:5173/@fs/D:/projects/ollama-ui-artifacts/main/src/components/ComponentVariations.tsx:24:3)
+    at div
+    at div
+    at div
+    at div
+    at div
+    at div
+    at AuthProvider (http://localhost:5173/@fs/D:/projects/ollama-ui-artifacts/main/src/components/auth/AuthProvider.tsx:29:32)
+    at App (http://localhost:5173/@fs/D:/projects/ollama-ui-artifacts/main/src/App.tsx:49:37)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+overrideMethod @ hook.js:608
+chunk-M7F2YF5A.js?v=645835d7:9129 Uncaught TypeError: Cannot read properties of undefined (reading 'html')
+    at ResponsiveDesigner (ResponsiveDesigner.tsx:111:50)
+    at renderWithHooks (chunk-M7F2YF5A.js?v=645835d7:11548:26)
+    at mountIndeterminateComponent (chunk-M7F2YF5A.js?v=645835d7:14926:21)
+    at beginWork (chunk-M7F2YF5A.js?v=645835d7:15914:22)
+    at beginWork$1 (chunk-M7F2YF5A.js?v=645835d7:19753:22)
+    at performUnitOfWork (chunk-M7F2YF5A.js?v=645835d7:19198:20)
+    at workLoopSync (chunk-M7F2YF5A.js?v=645835d7:19137:13)
+    at renderRootSync (chunk-M7F2YF5A.js?v=645835d7:19116:15)
+    at recoverFromConcurrentError (chunk-M7F2YF5A.js?v=645835d7:18736:28)
+    at performSyncWorkOnRoot (chunk-M7F2YF5A.js?v=645835d7:18879:28)
