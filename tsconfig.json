@@ -1,3 +1,4 @@
+
 {
   "compilerOptions": {
     "target": "es5",
@@ -11,5 +12,3 @@
     { "path": "./tsconfig.node.json" }
   ]
 }
-{
-  
