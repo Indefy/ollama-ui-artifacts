@@ -5,7 +5,7 @@ import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
 import { CodePayload } from '../LiveUIPreview';
-import { useAuth } from '../auth/AuthProvider';
+import { useAuth } from '../Auth';
 
 interface Component {
   id: string;
