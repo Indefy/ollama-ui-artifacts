@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Wand2, Loader2, CheckCircle, ArrowRight } from 'lucide-react';
 import { Button } from '../ui/button';
@@ -69,13 +68,16 @@ export const NaturalLanguageBuilder: React.FC<NaturalLanguageBuilderProps> = ({
 
     setIsGenerating(true);
     setCurrentStep(0);
-
     const componentNames = parseProjectPrompt(prompt);
     const projectComponents: ProjectComponent[] = componentNames.map((name, index) => ({
       id: `component-${index}`,
       name,
       description: `Generated ${name.toLowerCase()} component`,
-      code: { html: '', css: '', js: '' },
+      code: {
+        html: '',
+        css: '',
+        js: ''
+      },
       status: 'pending'
     }));
 
@@ -96,26 +98,22 @@ export const NaturalLanguageBuilder: React.FC<NaturalLanguageBuilderProps> = ({
         
         const result = await generateUICode(componentPrompt, selectedModel);
         
-        if (result.success && result.data) {
-          const parsedCode = JSON.parse(result.data);
-          
-          setComponents(prev => prev.map(c => 
-            c.id === component.id 
-              ? { 
-                  ...c, 
-                  code: {
-                    html: parsedCode.html || '',
-                    css: parsedCode.css || '',
-                    js: parsedCode.js || ''
-                  },
-                  status: 'completed' 
-                }
-              : c
-          ));
-        } else {
-          throw new Error('Generation failed');
-        }
+        // result is directly a CodePayload object with { html, css, js }
+        setComponents(prev => prev.map(c => 
+          c.id === component.id 
+            ? { 
+                ...c, 
+                code: {
+                  html: result.html || '',
+                  css: result.css || '',
+                  js: result.js || ''
+                },
+                status: 'completed' 
+              }
+            : c
+        ));
       } catch (error) {
+        console.error('Error generating component:', error);
         setComponents(prev => prev.map(c => 
           c.id === component.id ? { ...c, status: 'error' } : c
         ));
@@ -240,5 +238,4 @@ export const NaturalLanguageBuilder: React.FC<NaturalLanguageBuilderProps> = ({
   );
 };
 
-export { NaturalLanguageBuilder };
 export default NaturalLanguageBuilder;

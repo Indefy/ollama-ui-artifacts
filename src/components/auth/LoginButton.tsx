@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { LogIn, LogOut, User } from 'lucide-react';
+import { LogIn, LogOut } from 'lucide-react';
 import { Button } from '../ui/button';
 import { useAuth } from './AuthProvider';
 
@@ -31,9 +30,9 @@ export const LoginButton: React.FC = () => {
   }
 
   return (
-    <Button onClick={login} variant="outline">
+    <Button onClick={() => login()} variant="outline">
       <LogIn size={16} className="mr-2" />
-      Login with Replit
+      Set Name
     </Button>
   );
 };

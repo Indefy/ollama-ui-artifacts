@@ -6,6 +6,12 @@ export interface CodePayload {
   html: string;
   css: string;
   js: string;
+  success?: boolean;
+  data?: {
+    html?: string;
+    css?: string;
+    js?: string;
+  };
 }
 
 interface LiveUIPreviewProps {
@@ -39,40 +45,66 @@ const LiveUIPreview: React.FC<LiveUIPreviewProps> = ({
     setJsCode(initialJs);
   }, [initialHtml, initialCss, initialJs]);
 
-  useEffect(() => {
-    updatePreview();
-  }, [htmlCode, cssCode, jsCode]);
-
-  const updatePreview = () => {
-    if (iframeRef.current) {
-      const doc = iframeRef.current.contentDocument;
-      if (doc) {
-        const combinedCode = `
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <style>
-                body { margin: 0; padding: 20px; font-family: system-ui, sans-serif; }
-                ${cssCode}
-              </style>
-            </head>
-            <body>
-              ${htmlCode}
-              <script>
-                try {
-                  ${jsCode}
-                } catch (error) {
-                  console.error('JavaScript error:', error);
-                }
-              </script>
-            </body>
-          </html>
-        `;
-        doc.open();
-        doc.write(combinedCode);
-        doc.close();
-      }
+  // Helper function to validate and clean JavaScript code
+  const validateJavaScript = (jsCode: string): string => {
+    if (!jsCode || !jsCode.trim()) return '';
+    
+    try {
+      // Basic validation - check for common syntax issues
+      const cleanedCode = jsCode
+        .replace(/</g, '&lt;')  // Escape HTML tags in JS
+        .replace(/>/g, '&gt;')
+        .trim();
+        
+      return cleanedCode;
+    } catch (error) {
+      console.warn('JavaScript validation failed:', error);
+      return '// JavaScript validation failed - code was cleaned for safety';
     }
+  };
+  
+  // Helper function to validate CSS
+  const validateCSS = (cssCode: string): string => {
+    if (!cssCode || !cssCode.trim()) return '';
+    
+    // Basic CSS cleaning to prevent script injection
+    return cssCode
+      .replace(/<script/gi, '')
+      .replace(/<\/script>/gi, '')
+      .replace(/javascript:/gi, '')
+      .trim();
+  };
+
+  const generateSrcDoc = () => {
+    // Validate and clean the code content to prevent syntax errors
+    const safeHtmlCode = htmlCode || '';
+    const safeCssCode = validateCSS(cssCode || '');
+    const safeJsCode = validateJavaScript(jsCode || '');
+    
+    return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { margin: 0; padding: 20px; font-family: system-ui, sans-serif; }
+    ${safeCssCode}
+  </style>
+</head>
+<body>
+  ${safeHtmlCode}
+  <script>
+    (function() {
+      try {
+        ${safeJsCode}
+      } catch (error) {
+        console.error('JavaScript error in preview:', error);
+        console.log('Error details:', error.message);
+      }
+    })();
+  </script>
+</body>
+</html>`;
   };
 
   const handleCodeChange = (type: 'html' | 'css' | 'js', value: string) => {
@@ -90,7 +122,6 @@ const LiveUIPreview: React.FC<LiveUIPreviewProps> = ({
   const refreshPreview = () => {
     setIsRefreshing(true);
     setTimeout(() => {
-      updatePreview();
       setIsRefreshing(false);
     }, 500);
   };
@@ -129,6 +160,10 @@ const LiveUIPreview: React.FC<LiveUIPreviewProps> = ({
     a.download = 'component.html';
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleIframeLoad = () => {
+    console.log('Iframe loaded successfully');
   };
 
   return (
@@ -219,6 +254,8 @@ const LiveUIPreview: React.FC<LiveUIPreviewProps> = ({
                 style={{ minHeight: '400px' }}
                 title="Component Preview"
                 sandbox="allow-scripts"
+                onLoad={handleIframeLoad}
+                srcDoc={generateSrcDoc()}
               />
             </div>
           </div>

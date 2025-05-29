@@ -1,2 +1,5 @@
 
-export { AIMemorySystem as default } from './ai/AIMemorySystem';
+import AIMemorySystemComponent from './ai/AIMemorySystem';
+
+export { AIMemorySystemComponent as AIMemorySystem };
+export default AIMemorySystemComponent;

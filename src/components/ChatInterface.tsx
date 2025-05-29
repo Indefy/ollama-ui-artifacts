@@ -13,6 +13,7 @@ interface ChatInterfaceProps {
 // Lets creat sleek - glass like theme and designed login screen - with dark greenish color scheme with glowing effect
 
 const AVAILABLE_MODELS = [
+  'deepseek-r1:latest',
   'qwen3:30b',
   'llama2:latest',
   'phi4-reasoning:14b',
@@ -37,7 +38,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onGenerateCode }) => {
   const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
   const [inputValue, setInputValue] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<string>(AVAILABLE_MODELS[3]);
+  const [selectedModel, setSelectedModel] = useState<string>(AVAILABLE_MODELS[0]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {

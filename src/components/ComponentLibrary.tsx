@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Library, Search, Tag, Copy, Eye } from 'lucide-react';
 import { Button } from './ui/button';
@@ -148,6 +147,16 @@ const COMPONENT_TEMPLATES: ComponentTemplate[] = [
   color: #667eea;
   text-decoration: none;
   font-weight: 600;
+}
+
+.login-form input:focus + label,
+.login-form input:valid + label {
+  top: -10px;
+  left: 15px;
+  font-size: 12px;
+  background: rgba(102, 126, 234, 0.8);
+  padding: 2px 8px;
+  border-radius: 4px;
 }`,
       js: `// Form validation and interaction
 document.addEventListener('DOMContentLoaded', function() {
@@ -564,13 +573,452 @@ document.addEventListener('DOMContentLoaded', function() {
   setInterval(updateStats, 5000);
 });`
     }
+  },
+  {
+    id: 'card',
+    name: 'Modern Card',
+    category: 'Layout',
+    description: 'A clean, modern card component with shadow and rounded corners',
+    tags: ['card', 'container', 'modern'],
+    code: {
+      html: `<div class="modern-card">
+  <div class="card-header">
+    <h3>Card Title</h3>
+    <span class="card-badge">New</span>
+  </div>
+  <div class="card-content">
+    <p>This is a beautifully designed card component with modern styling and smooth animations.</p>
+    <button class="card-button">Learn More</button>
+  </div>
+</div>`,
+      css: `.modern-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+  max-width: 400px;
+}
+
+.modern-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.card-header {
+  padding: 1.5rem 1.5rem 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.card-badge {
+  background: #3b82f6;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.card-content {
+  padding: 1.5rem;
+}
+
+.card-content p {
+  color: #6b7280;
+  margin: 0 0 1rem 0;
+  line-height: 1.5;
+}
+
+.card-button {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.card-button:hover {
+  background: #2563eb;
+}`,
+      js: ''
+    }
+  },
+  {
+    id: 'pip-boy-chatbot',
+    name: 'Pip-Boy Chatbot Interface',
+    category: 'Gaming',
+    description: 'Authentic Fallout Pip-Boy style chatbot interface with retro-futuristic design',
+    tags: ['pip-boy', 'fallout', 'retro', 'chatbot', 'terminal'],
+    code: {
+      html: `<div class="pip-boy-interface">
+  <div class="pip-boy-header">
+    <div class="pip-boy-title">PIP-BOY 3000 - COMMUNICATION MODULE</div>
+    <div class="pip-boy-status">
+      <span class="status-indicator active"></span>
+      <span class="status-text">ONLINE</span>
+    </div>
+  </div>
+  
+  <div class="pip-boy-main">
+    <div class="chat-display">
+      <div class="scan-line"></div>
+      <div class="chat-messages">
+        <div class="message system">
+          <span class="timestamp">[14:32]</span>
+          <span class="text">ROBCO INDUSTRIES UNIFIED OPERATING SYSTEM</span>
+        </div>
+        <div class="message system">
+          <span class="timestamp">[14:32]</span>
+          <span class="text">COPYRIGHT 2075-2077 ROBCO INDUSTRIES</span>
+        </div>
+        <div class="message user">
+          <span class="timestamp">[14:33]</span>
+          <span class="text">> Hello, Pip-Boy</span>
+        </div>
+        <div class="message assistant">
+          <span class="timestamp">[14:33]</span>
+          <span class="text">GREETINGS, VAULT DWELLER. HOW MAY I ASSIST?</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="pip-boy-controls">
+      <div class="input-section">
+        <input type="text" class="pip-boy-input" placeholder="ENTER COMMAND..." />
+        <button class="pip-boy-button send-btn">SEND</button>
+      </div>
+      
+      <div class="control-buttons">
+        <button class="pip-boy-button">STATS</button>
+        <button class="pip-boy-button">INV</button>
+        <button class="pip-boy-button">DATA</button>
+        <button class="pip-boy-button">MAP</button>
+      </div>
+    </div>
+  </div>
+  
+  <div class="pip-boy-footer">
+    <div class="system-info">
+      <span>HEALTH: 100%</span>
+      <span>RADS: 0</span>
+      <span>AP: 70/70</span>
+    </div>
+  </div>
+</div>`,
+      css: `@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono:wght@400&display=swap');
+
+.pip-boy-interface {
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+  background: #001100;
+  color: #00ff00;
+  border: 3px solid #00aa00;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 600px;
+  height: 500px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 
+    inset 0 0 20px rgba(0, 255, 0, 0.3),
+    0 0 30px rgba(0, 255, 0, 0.2);
+  animation: powerOn 0.5s ease-in;
+}
+
+@keyframes powerOn {
+  0% { opacity: 0; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.pip-boy-interface::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 255, 0, 0.1) 2px,
+      rgba(0, 255, 0, 0.1) 4px
+    );
+  pointer-events: none;
+  z-index: 1;
+}
+
+.pip-boy-header {
+  background: #003300;
+  padding: 10px 15px;
+  border-bottom: 2px solid #00aa00;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+}
+
+.pip-boy-title {
+  font-size: 14px;
+  font-weight: bold;
+  text-shadow: 0 0 5px #00ff00;
+}
+
+.pip-boy-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  background: #ff0000;
+  border-radius: 50%;
+  animation: blink 2s infinite;
+}
+
+.status-indicator.active {
+  background: #00ff00;
+  box-shadow: 0 0 8px #00ff00;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0.3; }
+}
+
+.status-text {
+  font-size: 12px;
+}
+
+.pip-boy-main {
+  height: calc(100% - 100px);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 2;
+}
+
+.chat-display {
+  flex: 1;
+  padding: 15px;
+  overflow-y: auto;
+  position: relative;
+  background: rgba(0, 20, 0, 0.5);
+}
+
+.scan-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #00ff00, transparent);
+  animation: scan 3s infinite;
+}
+
+@keyframes scan {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(300px); opacity: 0; }
+}
+
+.chat-messages {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.message {
+  margin-bottom: 8px;
+  display: flex;
+  gap: 10px;
+}
+
+.timestamp {
+  color: #ffaa00;
+  min-width: 50px;
+}
+
+.message.system .text {
+  color: #ffaa00;
+}
+
+.message.user .text {
+  color: #00ffff;
+}
+
+.message.assistant .text {
+  color: #00ff00;
+  text-shadow: 0 0 3px #00ff00;
+}
+
+.pip-boy-controls {
+  padding: 15px;
+  background: #002200;
+  border-top: 2px solid #00aa00;
+}
+
+.input-section {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.pip-boy-input {
+  flex: 1;
+  background: #001100;
+  border: 2px solid #00aa00;
+  color: #00ff00;
+  padding: 8px 12px;
+  font-family: inherit;
+  font-size: 12px;
+  border-radius: 4px;
+  outline: none;
+}
+
+.pip-boy-input:focus {
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+  border-color: #00ff00;
+}
+
+.pip-boy-button {
+  background: #003300;
+  border: 2px solid #00aa00;
+  color: #00ff00;
+  padding: 8px 16px;
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+  text-shadow: 0 0 3px #00ff00;
+}
+
+.pip-boy-button:hover {
+  background: #004400;
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+  border-color: #00ff00;
+}
+
+.pip-boy-button:active {
+  transform: scale(0.95);
+}
+
+.control-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.pip-boy-footer {
+  background: #003300;
+  padding: 8px 15px;
+  border-top: 2px solid #00aa00;
+  position: relative;
+  z-index: 2;
+}
+
+.system-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #ffaa00;
+}
+
+.system-info span {
+  text-shadow: 0 0 3px currentColor;
+}`,
+      js: `// Pip-Boy interface interactions
+document.addEventListener('DOMContentLoaded', function() {
+  const input = document.querySelector('.pip-boy-input');
+  const sendBtn = document.querySelector('.send-btn');
+  const messagesContainer = document.querySelector('.chat-messages');
+  
+  function addMessage(type, text) {
+    const now = new Date();
+    const timestamp = \`[\${now.getHours().toString().padStart(2, '0')}:\${now.getMinutes().toString().padStart(2, '0')}]\`;
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = \`message \${type}\`;
+    messageDiv.innerHTML = \`
+      <span class="timestamp">\${timestamp}</span>
+      <span class="text">\${text}</span>
+    \`;
+    
+    messagesContainer.appendChild(messageDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+  
+  function sendMessage() {
+    const text = input.value.trim();
+    if (text) {
+      addMessage('user', \`> \${text}\`);
+      input.value = '';
+      
+      // Simulate bot response
+      setTimeout(() => {
+        const responses = [
+          'COMMAND PROCESSED. STANDING BY.',
+          'ACCESS GRANTED. PROCEED.',
+          'UNKNOWN COMMAND. TRY AGAIN.',
+          'SYSTEM NOMINAL. ALL CLEAR.',
+          'DATA ACCESSED. DISPLAYING RESULTS.'
+        ];
+        const response = responses[Math.floor(Math.random() * responses.length)];
+        addMessage('assistant', response);
+      }, 1000 + Math.random() * 2000);
+    }
+  }
+  
+  sendBtn.addEventListener('click', sendMessage);
+  input.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      sendMessage();
+    }
+  });
+  
+  // Add typing sound effect on focus (visual feedback)
+  input.addEventListener('input', function() {
+    this.style.textShadow = '0 0 8px #00ff00';
+    setTimeout(() => {
+      this.style.textShadow = '0 0 3px #00ff00';
+    }, 100);
+  });
+  
+  // Button click effects
+  document.querySelectorAll('.pip-boy-button').forEach(button => {
+    button.addEventListener('click', function() {
+      const originalText = this.textContent;
+      this.textContent = 'LOADING...';
+      this.style.color = '#ffaa00';
+      
+      setTimeout(() => {
+        this.textContent = originalText;
+        this.style.color = '#00ff00';
+      }, 1500);
+    });
+  });
+});`
+    }
   }
 ];
 
 const ComponentLibrary: React.FC<ComponentLibraryProps> = ({ onSelectTemplate }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [hoveredTemplate, setHoveredTemplate] = useState<string | null>(null);
 
   const categories = ['All', ...Array.from(new Set(COMPONENT_TEMPLATES.map(t => t.category)))];
   
@@ -627,8 +1075,6 @@ const ComponentLibrary: React.FC<ComponentLibraryProps> = ({ onSelectTemplate })
           <div
             key={template.id}
             className="glass-card p-4 hover:bg-white/10 transition-all cursor-pointer"
-            onMouseEnter={() => setHoveredTemplate(template.id)}
-            onMouseLeave={() => setHoveredTemplate(null)}
           >
             <div className="flex justify-between items-start mb-3">
               <h3 className="font-semibold text-white text-sm">{template.name}</h3>

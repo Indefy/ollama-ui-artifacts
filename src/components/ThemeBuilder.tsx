@@ -227,12 +227,14 @@ h1, h2, h3, h4, h5, h6 {
       <CardContent className="space-y-4">
         {/* Theme Name */}
         <div className="space-y-2">
-          <label className="text-white text-sm font-medium">Theme Name</label>
+          <label htmlFor="theme-name" className="text-white text-sm font-medium">Theme Name</label>
           <input
+            id="theme-name"
             type="text"
             value={theme.name}
             onChange={(e) => updateTheme({ name: e.target.value })}
             className="w-full glass-input text-white placeholder-gray-400"
+            placeholder="Enter theme name"
           />
         </div>
 
@@ -253,7 +255,7 @@ h1, h2, h3, h4, h5, h6 {
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)}>
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'colors' | 'typography' | 'spacing')}>
           <TabsList className="grid w-full grid-cols-3 bg-black/20">
             <TabsTrigger value="colors" className="text-white">
               <Palette size={16} className="mr-1" />
@@ -274,20 +276,24 @@ h1, h2, h3, h4, h5, h6 {
             <div className="space-y-3 mt-4">
               {Object.entries(theme.colors).map(([key, value]) => (
                 <div key={key} className="flex items-center space-x-3">
-                  <label className="text-white text-sm w-24 capitalize">
+                  <label htmlFor={`color-${key}`} className="text-white text-sm w-24 capitalize">
                     {key.replace(/([A-Z])/g, ' $1').trim()}
                   </label>
                   <input
+                    id={`color-picker-${key}`}
                     type="color"
                     value={value}
-                    onChange={(e) => updateColors({ [key]: e.target.value } as any)}
+                    onChange={(e) => updateColors({ [key]: e.target.value } as Partial<ColorPalette>)}
                     className="w-12 h-8 rounded border border-white/20"
+                    title={`${key} color picker`}
                   />
                   <input
+                    id={`color-${key}`}
                     type="text"
                     value={value}
-                    onChange={(e) => updateColors({ [key]: e.target.value } as any)}
+                    onChange={(e) => updateColors({ [key]: e.target.value } as Partial<ColorPalette>)}
                     className="flex-1 glass-input text-white text-sm"
+                    placeholder="Enter hex color"
                   />
                 </div>
               ))}
@@ -298,40 +304,48 @@ h1, h2, h3, h4, h5, h6 {
           {activeTab === 'typography' && (
             <div className="space-y-3 mt-4">
               <div>
-                <label className="text-white text-sm">Heading Font</label>
+                <label htmlFor="heading-font" className="text-white text-sm">Heading Font</label>
                 <input
+                  id="heading-font"
                   type="text"
                   value={theme.typography.headingFont}
                   onChange={(e) => updateTypography({ headingFont: e.target.value })}
                   className="w-full glass-input text-white"
+                  placeholder="e.g., Inter, sans-serif"
                 />
               </div>
               <div>
-                <label className="text-white text-sm">Body Font</label>
+                <label htmlFor="body-font" className="text-white text-sm">Body Font</label>
                 <input
+                  id="body-font"
                   type="text"
                   value={theme.typography.bodyFont}
                   onChange={(e) => updateTypography({ bodyFont: e.target.value })}
                   className="w-full glass-input text-white"
+                  placeholder="e.g., Inter, sans-serif"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-white text-sm">Heading Size</label>
+                  <label htmlFor="heading-size" className="text-white text-sm">Heading Size</label>
                   <input
+                    id="heading-size"
                     type="text"
                     value={theme.typography.headingSize}
                     onChange={(e) => updateTypography({ headingSize: e.target.value })}
                     className="w-full glass-input text-white"
+                    placeholder="e.g., 1.5rem"
                   />
                 </div>
                 <div>
-                  <label className="text-white text-sm">Body Size</label>
+                  <label htmlFor="body-size" className="text-white text-sm">Body Size</label>
                   <input
+                    id="body-size"
                     type="text"
                     value={theme.typography.bodySize}
                     onChange={(e) => updateTypography({ bodySize: e.target.value })}
                     className="w-full glass-input text-white"
+                    placeholder="e.g., 1rem"
                   />
                 </div>
               </div>
@@ -343,35 +357,40 @@ h1, h2, h3, h4, h5, h6 {
             <div className="space-y-3 mt-4">
               {Object.entries(theme.spacing).map(([key, value]) => (
                 <div key={key} className="flex items-center space-x-3">
-                  <label className="text-white text-sm w-12 uppercase">
+                  <label htmlFor={`spacing-${key}`} className="text-white text-sm w-12 uppercase">
                     {key}
                   </label>
                   <input
+                    id={`spacing-${key}`}
                     type="text"
                     value={value}
-                    onChange={(e) => updateSpacing({ [key]: e.target.value } as any)}
+                    onChange={(e) => updateSpacing({ [key]: e.target.value } as Partial<Spacing>)}
                     className="flex-1 glass-input text-white"
+                    placeholder="e.g., 1rem"
                   />
                 </div>
               ))}
               <div className="grid grid-cols-2 gap-3 pt-2">
                 <div>
-                  <label className="text-white text-sm">Border Radius</label>
+                  <label htmlFor="border-radius" className="text-white text-sm">Border Radius</label>
                   <input
+                    id="border-radius"
                     type="text"
                     value={theme.borderRadius}
                     onChange={(e) => updateTheme({ borderRadius: e.target.value })}
                     className="w-full glass-input text-white"
+                    placeholder="e.g., 0.5rem"
                   />
                 </div>
                 <div className="flex items-center space-x-2 pt-6">
                   <input
+                    id="enable-shadows"
                     type="checkbox"
                     checked={theme.shadows}
                     onChange={(e) => updateTheme({ shadows: e.target.checked })}
                     className="w-4 h-4"
                   />
-                  <label className="text-white text-sm">Enable Shadows</label>
+                  <label htmlFor="enable-shadows" className="text-white text-sm">Enable Shadows</label>
                 </div>
               </div>
             </div>

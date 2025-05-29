@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Brain, ThumbsUp, ThumbsDown, RotateCcw, MessageSquare } from 'lucide-react';
 import { Button } from '../ui/button';
@@ -27,7 +26,7 @@ interface AIMemorySystemProps {
   selectedModel: string;
 }
 
-export const AIMemorySystem: React.FC<AIMemorySystemProps> = ({
+const AIMemorySystem: React.FC<AIMemorySystemProps> = ({
   currentCode,
   onCodeUpdate,
   selectedModel
@@ -114,9 +113,18 @@ export const AIMemorySystem: React.FC<AIMemorySystemProps> = ({
 
       const result = await generateUICode(contextualPrompt, selectedModel);
 
-      if (result.success && result.data) {
-        const parsedCode = JSON.parse(result.data);
-        
+      if (result.success && typeof result.data === 'string') {
+        let parsedCode;
+        try {
+          parsedCode = JSON.parse(result.data);
+        } catch (error) {
+          console.error('JSON parse error:', error);
+          addChatMessage('assistant', 'Sorry, I could not parse the improved component code. Please try again.');
+          setIsImproving(false);
+          setImprovementPrompt('');
+          return;
+        }
+
         const newCode: CodePayload = {
           html: parsedCode.html || currentCode.html,
           css: parsedCode.css || currentCode.css,
@@ -137,6 +145,7 @@ export const AIMemorySystem: React.FC<AIMemorySystemProps> = ({
         throw new Error('Improvement generation failed');
       }
     } catch (error) {
+      console.error('Improvement error:', error);
       addChatMessage('assistant', 'Sorry, I had trouble improving the component. Please try again.');
     } finally {
       setIsImproving(false);
@@ -153,6 +162,7 @@ export const AIMemorySystem: React.FC<AIMemorySystemProps> = ({
       const negativePatterns = JSON.parse(localStorage.getItem('component_feedback') || '[]')
         .filter((f: ComponentFeedback) => f.rating === 'negative')
         .map((f: ComponentFeedback) => f.componentId);
+      console.log('Avoiding patterns from components:', negativePatterns);
 
       const regeneratePrompt = `
         Regenerate a similar component with a different approach. 
@@ -167,18 +177,34 @@ export const AIMemorySystem: React.FC<AIMemorySystemProps> = ({
       const result = await generateUICode(regeneratePrompt, selectedModel);
 
       if (result.success && result.data) {
-        const parsedCode = JSON.parse(result.data);
-        
+        let parsedCode;
+        if (typeof result.data === 'string') {
+          try {
+            parsedCode = JSON.parse(result.data);
+          } catch (error) {
+            console.error('JSON parse error:', error);
+            addChatMessage('assistant', 'Sorry, I could not parse the regenerated component code.');
+            setIsImproving(false);
+            return;
+          }
+        } else {
+          parsedCode = result.data;
+        }
+
+        // Ensure currentCode is defined and fallback to empty strings if not
+        const safeCurrentCode = currentCode || { html: '', css: '', js: '' };
+
         const newCode: CodePayload = {
-          html: parsedCode.html || currentCode.html,
-          css: parsedCode.css || currentCode.css,
-          js: parsedCode.js || currentCode.js
+          html: parsedCode.html || safeCurrentCode.html,
+          css: parsedCode.css || safeCurrentCode.css,
+          js: parsedCode.js || safeCurrentCode.js
         };
 
         onCodeUpdate(newCode);
         addChatMessage('assistant', 'Component regenerated with a fresh approach');
       }
     } catch (error) {
+      console.error('Regeneration error:', error);
       addChatMessage('assistant', 'Sorry, I had trouble regenerating the component. Please try again.');
     } finally {
       setIsImproving(false);

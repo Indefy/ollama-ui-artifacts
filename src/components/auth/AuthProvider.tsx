@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface User {
@@ -12,7 +11,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: () => void;
+  login: (name?: string) => void;
   logout: () => void;
 }
 
@@ -31,55 +30,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    checkAuthStatus();
+    // Load saved user from localStorage
+    const savedUserName = localStorage.getItem('pocket-ai-username');
+    if (savedUserName) {
+      setUser({
+        id: 'local-user',
+        name: savedUserName,
+        profileImage: `https://ui-avatars.com/api/?name=${encodeURIComponent(savedUserName)}&background=667eea&color=fff`,
+        bio: 'Local development user'
+      });
+    }
+    setIsLoading(false);
   }, []);
 
-  const checkAuthStatus = async () => {
-    try {
-      const response = await fetch('/__replauthuser');
-      if (response.ok) {
-        const userData = await response.json();
-        setUser(userData);
-      }
-    } catch (error) {
-      console.error('Auth check failed:', error);
-    } finally {
-      setIsLoading(false);
-    }
+  const login = (name?: string) => {
+    const userName = name || prompt('Enter your name:') || 'Anonymous User';
+    
+    // Save to localStorage
+    localStorage.setItem('pocket-ai-username', userName);
+    
+    setUser({
+      id: 'local-user',
+      name: userName,
+      profileImage: `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=667eea&color=fff`,
+      bio: 'Local development user'
+    });
   };
 
-  const login = () => {
-    window.addEventListener("message", authComplete);
-    var h = 500;
-    var w = 350;
-    var left = screen.width / 2 - w / 2;
-    var top = screen.height / 2 - h / 2;
-
-    var authWindow = window.open(
-      "https://replit.com/auth_with_repl_site?domain=" + location.host,
-      "_blank",
-      "modal=yes, toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width=" +
-        w + ", height=" + h + ", top=" + top + ", left=" + left
-    );
-
-    function authComplete(e: MessageEvent) {
-      if (e.data !== "auth_complete") {
-        return;
-      }
-      window.removeEventListener("message", authComplete);
-      authWindow?.close();
-      checkAuthStatus();
-    }
-  };
-
-  const logout = async () => {
-    try {
-      await fetch('/logout', { method: 'POST' });
-      setUser(null);
-      window.location.reload();
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
+  const logout = () => {
+    localStorage.removeItem('pocket-ai-username');
+    setUser(null);
   };
 
   return (

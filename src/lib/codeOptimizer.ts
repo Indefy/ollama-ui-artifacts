@@ -64,26 +64,83 @@ Return as JSON with this structure:
     }
 
     const data = await response.json();
-    const jsonMatch = data.response.match(/\{[\s\S]*\}/);
-
-    if (!jsonMatch) {
-      throw new Error('No valid JSON found in analysis response');
+    
+    // Extract JSON from the response, handling markdown code fences and other text
+    let jsonStr = '';
+    
+    // First, try to extract JSON from markdown code fences
+    const markdownJsonMatch = data.response.match(/```json\s*([\s\S]*?)\s*```/);
+    if (markdownJsonMatch) {
+      jsonStr = markdownJsonMatch[1].trim();
+    } else {
+      // Fallback to original regex that looks for any JSON object
+      const jsonMatch = data.response.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('No valid JSON found in analysis response');
+      }
+      jsonStr = jsonMatch[0];
     }
 
-    const result = JSON.parse(jsonMatch[0]);
+    if (!jsonStr) {
+      throw new Error('No valid JSON found in analysis response');
+    }
+    
+    // Clean the JSON string to fix common issues
+    try {
+      // First attempt: parse as-is
+      const result = JSON.parse(jsonStr);
+      
+      // Validate required structure
+      if (!result.optimizedCode || !result.optimizedCode.html) {
+        throw new Error('Invalid response structure');
+      }
 
-    // Format the optimized code with Prettier
-    const formattedCode = {
-      html: formatCodeWithPrettier(result.optimizedCode.html, 'html'),
-      css: formatCodeWithPrettier(result.optimizedCode.css, 'css'),
-      js: formatCodeWithPrettier(result.optimizedCode.js, 'babel')
-    };
+      // Format the optimized code with Prettier
+      const formattedCode = {
+        html: formatCodeWithPrettier(result.optimizedCode.html || code.html, 'html'),
+        css: formatCodeWithPrettier(result.optimizedCode.css || code.css, 'css'),
+        js: formatCodeWithPrettier(result.optimizedCode.js || code.js, 'babel')
+      };
 
-    return {
-      suggestions: result.suggestions || [],
-      optimizedCode: formattedCode,
-      smartName: result.smartName || 'OptimizedComponent'
-    };
+      return {
+        suggestions: Array.isArray(result.suggestions) ? result.suggestions : [],
+        optimizedCode: formattedCode,
+        smartName: result.smartName || generateSmartComponentName(code)
+      };
+      
+    } catch (parseError) {
+      console.warn('JSON parsing failed, attempting to clean and retry:', parseError);
+      
+      // Attempt to clean the JSON string
+      jsonStr = jsonStr
+        .replace(/\\n/g, '\\\\n')  // Escape newlines in strings
+        .replace(/\\"/g, '\\\\"')  // Escape quotes
+        .replace(/\n/g, ' ')       // Remove actual newlines
+        .replace(/\r/g, ' ')       // Remove carriage returns
+        .replace(/\t/g, ' ')       // Replace tabs with spaces
+        .replace(/\s+/g, ' ')      // Collapse multiple spaces
+        .trim();
+      
+      try {
+        const result = JSON.parse(jsonStr);
+        
+        const formattedCode = {
+          html: formatCodeWithPrettier(result.optimizedCode?.html || code.html, 'html'),
+          css: formatCodeWithPrettier(result.optimizedCode?.css || code.css, 'css'),
+          js: formatCodeWithPrettier(result.optimizedCode?.js || code.js, 'babel')
+        };
+
+        return {
+          suggestions: Array.isArray(result.suggestions) ? result.suggestions : [],
+          optimizedCode: formattedCode,
+          smartName: result.smartName || generateSmartComponentName(code)
+        };
+        
+      } catch (secondParseError) {
+        console.warn('Second JSON parse attempt failed:', secondParseError);
+        throw new Error('Unable to parse AI response JSON');
+      }
+    }
 
   } catch (error) {
     console.warn('Code analysis failed, returning original code:', error);
@@ -117,7 +174,7 @@ export function formatCodeWithPrettier(code: string, parser: 'html' | 'css' | 'b
 function formatHTML(html: string): string {
   if (!html.trim()) return '';
 
-  let formatted = html.trim();
+  const formatted = html.trim();
   let indentLevel = 0;
   const indentSize = 2;
   const lines = formatted.split(/>\s*</);

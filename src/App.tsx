@@ -1,12 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, ComponentType } from 'react';
 import { 
   MessageSquare, 
   Eye, 
-  Code2, 
-  Download, 
-  Settings, 
-  Menu, 
-  X,
+  Code2,
+  Download,
+  Menu,
   Sparkles,
   Monitor,
   Palette,
@@ -32,6 +30,50 @@ import NaturalLanguageBuilder from './components/NaturalLanguageBuilder';
 import AIMemorySystem from './components/AIMemorySystem';
 
 type TabId = 'chat' | 'preview' | 'editor' | 'export' | 'settings' | 'library' | 'tools' | 'projects' | 'visual' | 'ai-builder';
+
+// Type definitions for component props
+interface ResponsiveBreakpoints {
+  mobile: string;
+  tablet: string;
+  desktop: string;
+}
+
+interface Theme {
+  name: string;
+  colors: {
+    primary: string;
+    secondary: string;
+    accent: string;
+    background: string;
+    surface: string;
+    text: string;
+    textSecondary: string;
+  };
+  typography: {
+    headingFont: string;
+    bodyFont: string;
+    headingSize: string;
+    bodySize: string;
+    lineHeight: string;
+  };
+  spacing: {
+    xs: string;
+    sm: string;
+    md: string;
+    lg: string;
+    xl: string;
+  };
+  borderRadius: string;
+  shadows: boolean;
+}
+
+interface ProjectComponent {
+  id: string;
+  name: string;
+  description: string;
+  code: CodePayload;
+  status: 'pending' | 'generating' | 'completed' | 'error';
+}
 
 interface Tab {
   id: TabId;
@@ -143,7 +185,7 @@ p {
         <div className="p-4 space-y-4">
           <MultiStepGenerator 
             onGenerateCode={(html, css, js) => handleGenerateCode(html, css, js)}
-            selectedModel="llama3.2:latest"
+            selectedModel="deepseek-r1:latest"
           />
         </div>
       </div>
@@ -157,13 +199,13 @@ p {
         </div>
         <div className="p-4 space-y-4">
           <FrameworkSelector 
-            onFrameworkChange={(framework, variant) => {
+            onFrameworkChange={(framework: string, variant: string) => {
               console.log('Framework change:', framework, variant);
             }}
             currentCode={currentCode}
           />
           <ResponsiveDesigner 
-            onResponsiveChange={(breakpoints) => {
+            onResponsiveChange={(breakpoints: ResponsiveBreakpoints) => {
               console.log('Responsive changes:', breakpoints);
             }}
             currentCode={currentCode}
@@ -180,7 +222,7 @@ p {
         </div>
         <div className="p-4">
           <ThemeBuilder
-            onThemeChange={(theme) => {
+            onThemeChange={(theme: Theme) => {
               console.log('Theme changed:', theme);
             }}
           />
@@ -194,9 +236,9 @@ p {
           </div>
           <div className="p-4">
             <ComponentVariations
-              onSelectVariation={(code) => setCurrentCode(code)}
+              onSelectVariation={(code: CodePayload) => setCurrentCode(code)}
               basePrompt={lastPrompt}
-              selectedModel="llama3.2:latest"
+              selectedModel="deepseek-r1:latest"
             />
           </div>
         </div>
@@ -208,15 +250,16 @@ p {
     {
       id: 'chat',
       label: 'Chat',
-      icon: MessageSquare,
+      icon: MessageSquare as ComponentType<{ size?: number; className?: string }>,
       component: <ChatInterface onGenerateCode={handleGenerateCode} />
     },
     {
       id: 'preview',
       label: 'Preview',
-      icon: Eye,
+      icon: Eye as ComponentType<{ size?: number; className?: string }>,
       component: (
         <LiveUIPreview
+          key={`${currentCode.html.length}-${currentCode.css.length}-${currentCode.js.length}`}
           initialHtml={currentCode.html}
           initialCss={currentCode.css}
           initialJs={currentCode.js}
@@ -227,44 +270,66 @@ p {
     {
       id: 'editor',
       label: 'Editor',
-      icon: Code2,
+      icon: Code2 as ComponentType<{ size?: number; className?: string }>,
       component: <CodeEditor />
     },
     {
       id: 'library',
       label: 'Library',
-      icon: Monitor,
+      icon: Monitor as ComponentType<{ size?: number; className?: string }>,
       component: <ComponentLibrary onSelectTemplate={handleTemplateSelect} />
     },
     {
       id: 'tools',
       label: 'Tools',
-      icon: Sparkles,
+      icon: Sparkles as ComponentType<{ size?: number; className?: string }>,
       component: <AdvancedTools />
     },
     {
       id: 'export',
       label: 'Export',
-      icon: Download,
+      icon: Download as ComponentType<{ size?: number; className?: string }>,
       component: <CodeExport code={currentCode} componentName={componentName} />
     },
-    { 
-      id: 'projects', 
-      label: 'Projects', 
-      icon: FolderOpen, 
-      component: null 
+    {
+      id: 'projects',
+      label: 'Projects',
+      icon: FolderOpen as ComponentType<{ size?: number; className?: string }>,
+      component: (
+        <ProjectSystem 
+          onCodeGenerate={(code: CodePayload) => handleGenerateCode(code.html, code.css, code.js)}
+        />
+      )
     },
-    { 
-      id: 'visual', 
-      label: 'Visual Editor', 
-      icon: MousePointer, 
-      component: null 
+    {
+      id: 'visual',
+      label: 'Visual Editor',
+      icon: MousePointer as ComponentType<{ size?: number; className?: string }>,
+      component: (
+        <DragDropEditor 
+          onCodeGenerate={(code: CodePayload) => handleGenerateCode(code.html, code.css, code.js)}
+        />
+      )
     },
-    { 
-      id: 'ai-builder', 
-      label: 'AI Builder', 
-      icon: Brain, 
-      component: null 
+    {
+      id: 'ai-builder',
+      label: 'AI Builder',
+      icon: Brain as ComponentType<{ size?: number; className?: string }>,
+      component: (
+        <div className="h-full p-4 space-y-6 overflow-y-auto">
+          <NaturalLanguageBuilder 
+            onProjectGenerated={(components: ProjectComponent[]) => {
+              console.log('Generated project components:', components);
+            }}
+            selectedModel="deepseek-r1:latest"
+          />
+          <AIMemorySystem 
+            currentCode={currentCode}
+            onCodeUpdate={(code: CodePayload) => handleGenerateCode(code.html, code.css, code.js)}
+            selectedModel="deepseek-r1:latest"
+          />
+        </div>
+      )
     }
   ];
 
@@ -357,34 +422,6 @@ p {
           {/* Tab content */}
           <div className="flex-1 overflow-hidden">
             {activeTabData?.component}
-            {activeTab === 'tools' && <AdvancedTools />}
-            {activeTab === 'projects' && (
-              <ProjectSystem 
-                currentComponent={currentCode}
-                onLoadComponent={(component) => handleGenerateCode(component.code.html, component.code.css, component.code.js)}
-              />
-            )}
-            {activeTab === 'visual' && (
-              <DragDropEditor 
-                onCodeGenerate={(code) => handleGenerateCode(code.html, code.css, code.js)}
-              />
-            )}
-            {activeTab === 'ai-builder' && (
-              <div className="h-full p-4 space-y-6 overflow-y-auto">
-                <NaturalLanguageBuilder 
-                  onProjectGenerated={(components) => {
-                    // Handle project generation - could integrate with project system
-                    console.log('Generated project components:', components);
-                  }}
-                  selectedModel="llama3.2:latest"
-                />
-                <AIMemorySystem 
-                  currentCode={currentCode}
-                  onCodeUpdate={(code) => handleGenerateCode(code.html, code.css, code.js)}
-                  selectedModel="llama3.2:latest"
-                />
-              </div>
-            )}
           </div>
         </div>
       </div>
