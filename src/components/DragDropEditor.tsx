@@ -1,2 +1,2 @@
 
-export { DragDropEditor as default } from './visual-editor/DragDropEditor';
+export { default } from './visual-editor/DragDropEditor';

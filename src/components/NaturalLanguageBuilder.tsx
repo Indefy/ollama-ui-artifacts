@@ -1,2 +1,3 @@
 
-export { NaturalLanguageBuilder as default } from './ai/NaturalLanguageBuilder';
+export { default } from './ai/NaturalLanguageBuilder';
+export { default } from './ai/NaturalLanguageBuilder';

@@ -294,5 +294,4 @@ export const ProjectSystem: React.FC<ProjectSystemProps> = ({
   );
 };
 
-export { ProjectSystem };
 export default ProjectSystem;

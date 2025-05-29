@@ -240,4 +240,5 @@ export const NaturalLanguageBuilder: React.FC<NaturalLanguageBuilderProps> = ({
   );
 };
 
+export { NaturalLanguageBuilder };
 export default NaturalLanguageBuilder;

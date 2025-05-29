@@ -1,2 +1,2 @@
 
-export { ProjectSystem as default } from './project/ProjectSystem';
+export { default } from './project/ProjectSystem';
