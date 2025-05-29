@@ -3,7 +3,6 @@ import { formatCodeWithPrettier } from './codeOptimizer';
 
 // import { analyzeAndOptimizeCode } from './codeOptimizer'; // Temporarily disabled
 
-
 /**
  * Helper function to provide style-specific guidance based on user prompt
  */
@@ -154,85 +153,119 @@ export function parseAIResponse(rawResponse: string): { html: string; css: strin
   }
 }
 
-/**
- * Generates UI code with enhanced error handling and validation
- */
+interface GenerationResult {
+  success: boolean;
+  data?: CodePayload | string;
+  error?: string;
+}
+
 export async function generateUICode(
   prompt: string, 
-  modelName: string
+  modelName: string = 'deepseek-r1:latest'
 ): Promise<CodePayload> {
-  console.log(`[generateUICode] Starting generation for: "${prompt}"`);
-  
-  const ollamaApiUrl = 'http://localhost:11434/api/generate';
-  
-  // Health check with promise timeout
+  const systemPrompt = `You are a UI component generator. Generate clean, modern, responsive HTML, CSS, and JavaScript code based on the user's request.
+
+IMPORTANT: Return ONLY a JSON object with this exact structure:
+{
+  "html": "HTML code here",
+  "css": "CSS code here", 
+  "js": "JavaScript code here"
+}
+
+Requirements:
+- Use modern HTML5 semantic elements
+- Write responsive CSS with flexbox/grid
+- Include proper accessibility attributes
+- Add smooth animations and transitions
+- Use vanilla JavaScript for interactivity
+- Make components mobile-friendly
+- Use modern color schemes and typography
+- Ensure clean, readable code structure`;
+
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
-    
-    const healthCheck = await fetch('http://localhost:11434', { 
-      method: 'HEAD',
-      signal: controller.signal
-    });
-    
-    clearTimeout(timeoutId);
-    
-    if (!healthCheck.ok) {
-      throw new Error(`Ollama health check failed with status ${healthCheck.status}`);
-    }
-  } catch (error) {
-    console.warn('[generateUICode] Ollama unavailable, using fallback:', error);
-    return generateBasicUICode(prompt);
-  }
-  
-  // Construct detailed prompt
-  const systemPrompt = getAdvancedSystemPrompt(prompt, getStyleGuidance(prompt));
-  
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-    
-    const response = await fetch(ollamaApiUrl, {
+    const response = await fetch('http://localhost:11434/api/generate', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({
         model: modelName,
-        prompt: systemPrompt,
+        prompt: `${systemPrompt}\n\nUser Request: ${prompt}`,
         stream: false,
-        options: { temperature: 0.7, num_predict: 2048 }
-      }),
-      signal: controller.signal
+        options: {
+          temperature: 0.7,
+          top_p: 0.9,
+          stop: ['</json>', 'Human:', 'Assistant:']
+        }
+      })
     });
 
-    clearTimeout(timeoutId);
-
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`API error (${response.status}): ${errorText}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const data = await response.json();
-    
-    // Parse and validate response
-    try {
-      const parsedResponse = parseAIResponse(data.response);
-      
-      // Format the code with Prettier
+    let generatedText = data.response || '';
+
+    // Clean up the response - remove any markdown formatting
+    generatedText = generatedText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+
+    // Find JSON content
+    const jsonMatch = generatedText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      console.warn('No JSON found in response:', generatedText);
       return {
-        html: formatCodeWithPrettier(parsedResponse.html, 'html'),
-        css: formatCodeWithPrettier(parsedResponse.css, 'css'),
-        js: formatCodeWithPrettier(parsedResponse.js || '', 'babel')
+        html: '<div class="error">Could not generate component. Please try again.</div>',
+        css: '.error { color: red; padding: 20px; text-align: center; }',
+        js: ''
       };
-      
-    } catch (parseError) {
-      console.error('[generateUICode] Parse error:', parseError);
-      return generateBasicUICode(prompt);
     }
-    
+
+    try {
+      const parsed = JSON.parse(jsonMatch[0]);
+      return {
+        html: parsed.html || '',
+        css: parsed.css || '',
+        js: parsed.js || ''
+      };
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError);
+      console.log('Raw response:', generatedText);
+
+      // Fallback: try to extract code sections manually
+      const htmlMatch = generatedText.match(/"html":\s*"([^"]*(?:\\.[^"]*)*)"/);
+      const cssMatch = generatedText.match(/"css":\s*"([^"]*(?:\\.[^"]*)*)"/);
+      const jsMatch = generatedText.match(/"js":\s*"([^"]*(?:\\.[^"]*)*)"/);
+
+      return {
+        html: htmlMatch ? htmlMatch[1].replace(/\\"/g, '"').replace(/\\n/g, '\n') : '<div>Error parsing HTML</div>',
+        css: cssMatch ? cssMatch[1].replace(/\\"/g, '"').replace(/\\n/g, '\n') : '',
+        js: jsMatch ? jsMatch[1].replace(/\\"/g, '"').replace(/\\n/g, '\n') : ''
+      };
+    }
   } catch (error) {
-    console.error('[generateUICode] Generation failed:', error);
-    return generateBasicUICode(prompt);
+    console.error('Error generating code:', error);
+    return {
+      html: '<div class="error">Failed to generate component. Please check your connection and try again.</div>',
+      css: '.error { color: red; padding: 20px; text-align: center; border: 1px solid red; border-radius: 4px; }',
+      js: ''
+    };
   }
+}
+
+export async function generateCodeWithFramework(
+  prompt: string,
+  framework: 'react' | 'vue' | 'angular',
+  modelName: string = 'deepseek-r1:latest'
+): Promise<CodePayload> {
+  const frameworkPrompts = {
+    react: 'Generate a React functional component with hooks',
+    vue: 'Generate a Vue 3 component with composition API',
+    angular: 'Generate an Angular component with TypeScript'
+  };
+
+  const enhancedPrompt = `${frameworkPrompts[framework]}: ${prompt}`;
+  return generateUICode(enhancedPrompt, modelName);
 }
 
 /**
@@ -539,113 +572,3 @@ export function generateBasicUICode(prompt: string): CodePayload {
 });`,
   };
 }
-
-// export async function generateUICode(prompt: string, modelName: string): Promise<CodePayload> {
-//   console.log(`Attempting to generate code for prompt: "${prompt}" using model: ${modelName}`);
-
-//   const ollamaApiUrl = 'http://localhost:11434/api/generate';
-
-//   // Construct the detailed prompt for the LLM
-//   const systemPrompt = `You are an expert web developer specializing in creating modern UI components.
-// Based on the following user request, generate the HTML, CSS, and JavaScript code for a single, self-contained UI component.
-// The HTML should be within a single root div.
-// The CSS should be scoped or otherwise designed to apply only to this component. Use standard CSS and avoid preprocessors.
-// The JavaScript should be minimal and only for interactivity within this component. If no JavaScript is needed, provide an empty string for the 'js' field or omit the field.
-
-// User Request: "${prompt}"
-
-// Please provide your response as a single JSON object with the following exact structure, and nothing else (no explanations, no markdown code fences):
-// {
-//   "html": "YOUR_HTML_CODE_HERE",
-//   "css": "YOUR_CSS_CODE_HERE",
-//   "js": "YOUR_JAVASCRIPT_CODE_HERE"
-// }
-
-// IMPORTANT: Within the JSON string values for "html", "css", and "js", all newline characters must be escaped as \\n. For example, a two-line HTML snippet like \`<div><p>Hello</p></div>\` should be represented in the JSON string as \`"<div>\\\\n  <p>Hello</p>\\\\n</div>"\`. Ensure the JSON itself is valid.
-// Ensure the HTML, CSS, and JavaScript are complete and ready to use.`;
-
-//   try {
-//     console.log('Sending request to Ollama...');
-//     const response = await fetch(ollamaApiUrl, {
-//       method: 'POST',
-//       headers: {
-//         'Content-Type': 'application/json',
-//       },
-//       body: JSON.stringify({
-//         model: modelName,
-//         prompt: systemPrompt,
-//         stream: false,
-//       }),
-//     });
-
-//     console.log('Received response from Ollama. Status:', response.status);
-//     if (!response.ok) {
-//       const errorBody = await response.text();
-//       console.error('Ollama API Error:', response.status, errorBody);
-//       return {
-//         html: `<div class="error-container"><h2>Error Communicating with Ollama</h2><p>Status: ${response.status}</p><pre>${errorBody}</pre></div>`,
-//         css: `.error-container { color: red; padding: 20px; background: #fff0f0; border: 1px solid red; border-radius: 8px; text-align: left; } pre { white-space: pre-wrap; word-wrap: break-word; }`,
-//         js: '// Ollama API Error',
-//       };
-//     }
-
-//     const ollamaData = await response.json();
-//     console.log('Ollama data received:', ollamaData);
-
-//     if (ollamaData && ollamaData.response) {
-//       let llmResponseString = ollamaData.response.trim();
-      
-//       // Attempt to remove markdown fences if LLM adds them despite instructions
-//       if (llmResponseString.startsWith('```json')) {
-//         llmResponseString = llmResponseString.substring(7);
-//         if (llmResponseString.endsWith('```')) {
-//           llmResponseString = llmResponseString.substring(0, llmResponseString.length - 3);
-//         }
-//         llmResponseString = llmResponseString.trim();
-//       }
-
-//       console.log('Sanitized LLM response string (newlines escaped):', llmResponseString);
-
-//       try {
-//         const parsedCode: Partial<CodePayload> = JSON.parse(llmResponseString);
-        
-//         // Ensure all parts are strings, default to empty string if missing (especially for js)
-//         const html = typeof parsedCode.html === 'string' ? parsedCode.html : '';
-//         const css = typeof parsedCode.css === 'string' ? parsedCode.css : '';
-//         const js = typeof parsedCode.js === 'string' ? parsedCode.js : '';
-
-//         if (html || css || js) { // At least one part should have content
-//             console.log('Successfully parsed CodePayload:', { html, css, js });
-//             return { html, css, js };
-//         }
-//         console.error('Parsed CodePayload is empty or invalid.', parsedCode);
-//         throw new Error('Parsed CodePayload is empty or invalid.');
-
-//       } catch (parseError) {
-//         console.error('Error parsing LLM JSON response:', parseError);
-//         console.error('Sanitized LLM response string that failed to parse:', llmResponseString);
-//         console.error('Original raw LLM response string was:', ollamaData.response);
-//         return {
-//           html: `<div class="error-container"><h2>Error Parsing AI Response</h2><p>The AI's response was not valid JSON or did not meet the expected structure after sanitization.</p><h4>Sanitized Response Attempted:</h4><pre>${llmResponseString}</pre><h4>Original Raw Response:</h4><pre>${ollamaData.response}</pre></div>`,
-//           css: `.error-container { color: red; padding: 20px; background: #fff0f0; border: 1px solid red; border-radius: 8px; text-align: left; } pre { white-space: pre-wrap; word-wrap: break-word; font-size: 0.8em; } h4 { margin-top: 10px; margin-bottom: 5px; }`,
-//           js: '// Error parsing LLM JSON',
-//         };
-//       }
-//     } else {
-//       console.error('Ollama API response did not contain a .response field or was empty:', ollamaData);
-//       return {
-//         html: `<div class="error-container"><h2>Invalid Ollama API Response</h2><p>The API response from Ollama was missing the expected 'response' field or the field was empty.</p></div>`,
-//         css: `.error-container { color: red; padding: 20px; background: #fff0f0; border: 1px solid red; border-radius: 8px; text-align: left; }`,
-//         js: '// Invalid Ollama API response',
-//       };
-//     }
-
-//   } catch (error) {
-//     console.error('Failed to fetch or process Ollama API response:', error);
-//     return {
-//       html: `<div class="error-container"><h2>Failed to Connect to AI</h2><p>Could not connect to the Ollama service or another unexpected error occurred.</p><p>${error instanceof Error ? error.message : String(error)}</p></div>`,
-//       css: `.error-container { color: red; padding: 20px; background: #fff0f0; border: 1px solid red; border-radius: 8px; text-align: left; }`,
-//       js: '// Network or other fetch error',
-//     };
-//   }
-// }
