@@ -15,46 +15,91 @@ export interface CodePayload {
 }
 
 interface LiveUIPreviewProps {
-  initialHtml: string;
-  initialCss: string;
-  initialJs: string;
-  onCodeChange: (code: CodePayload) => void;
+  initialHtml?: string;
+  initialCss?: string;
+  initialJs?: string;
+  onCodeChange?: (code: CodePayload) => void;
+  code?: CodePayload;
+  breakpoints?: {
+    mobile: string;
+    tablet: string;
+    desktop: string;
+  };
 }
 
 type ViewMode = 'preview' | 'code';
 type DeviceSize = 'mobile' | 'tablet' | 'desktop';
 
 const LiveUIPreview: React.FC<LiveUIPreviewProps> = ({
-  initialHtml,
-  initialCss,
-  initialJs,
-  onCodeChange
+  initialHtml = '',
+  initialCss = '',
+  initialJs = '',
+  onCodeChange,
+  code,
+  breakpoints
 }) => {
   const [viewMode, setViewMode] = useState<ViewMode>('preview');
   const [deviceSize, setDeviceSize] = useState<DeviceSize>('desktop');
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [htmlCode, setHtmlCode] = useState(initialHtml);
-  const [cssCode, setCssCode] = useState(initialCss);
-  const [jsCode, setJsCode] = useState(initialJs);
+  
+  // Handle both prop systems (direct code object or individual props)
+  const [htmlCode, setHtmlCode] = useState(code?.html || initialHtml || '');
+  const [cssCode, setCssCode] = useState(code?.css || initialCss || '');
+  const [jsCode, setJsCode] = useState(code?.js || initialJs || '');
+  
   const [activeTab, setActiveTab] = useState<'html' | 'css' | 'js'>('html');
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
+  // Update code when props change
   useEffect(() => {
-    setHtmlCode(initialHtml);
-    setCssCode(initialCss);
-    setJsCode(initialJs);
-  }, [initialHtml, initialCss, initialJs]);
+    console.log('LiveUIPreview props updated:', { 
+      codeProvided: !!code,
+      initialHtmlLength: initialHtml?.length || 0, 
+      initialCssLength: initialCss?.length || 0,
+      initialJsLength: initialJs?.length || 0 
+    });
+    
+    if (code) {
+      setHtmlCode(code.html || '');
+      setCssCode(code.css || '');
+      setJsCode(code.js || '');
+      console.log('Updated from code prop', { 
+        htmlLength: code.html?.length || 0,
+        cssLength: code.css?.length || 0,
+        jsLength: code.js?.length || 0
+      });
+    } else if (initialHtml || initialCss || initialJs) {
+      setHtmlCode(initialHtml || '');
+      setCssCode(initialCss || '');
+      setJsCode(initialJs || '');
+      console.log('Updated from initial props');
+    }
+  }, [initialHtml, initialCss, initialJs, code]);
 
   // Helper function to validate and clean JavaScript code
   const validateJavaScript = (jsCode: string): string => {
     if (!jsCode || !jsCode.trim()) return '';
     
     try {
-      // Basic validation - check for common syntax issues
-      const cleanedCode = jsCode
-        .replace(/</g, '&lt;')  // Escape HTML tags in JS
-        .replace(/>/g, '&gt;')
+      console.log('Validating JS code:', jsCode.substring(0, 100) + '...');
+      
+      // Enhanced validation - check for and fix common syntax issues
+      // Less aggressive replacements to preserve more functionality
+      let cleanedCode = jsCode
+        .replace(/<script/gi, '&lt;script')  // Escape script tags
+        .replace(/<\/script>/gi, '&lt;/script>')
+        .replace(/document\.write\(/g, 'console.log(') // Prevent document.write calls that could break iframe
+        // Keep most JavaScript functionality intact
         .trim();
+      
+      // Lighter safety wrapper that preserves more functionality
+      cleanedCode = `
+        try {
+          ${cleanedCode}
+        } catch (error) {
+          console.error('JavaScript runtime error:', error.message);
+        }
+      `.trim();
         
       return cleanedCode;
     } catch (error) {
@@ -63,39 +108,74 @@ const LiveUIPreview: React.FC<LiveUIPreviewProps> = ({
     }
   };
   
-  // Helper function to validate CSS
+  // Enhanced helper function to validate CSS
   const validateCSS = (cssCode: string): string => {
     if (!cssCode || !cssCode.trim()) return '';
     
-    // Basic CSS cleaning to prevent script injection
-    return cssCode
-      .replace(/<script/gi, '')
-      .replace(/<\/script>/gi, '')
-      .replace(/javascript:/gi, '')
-      .trim();
+    try {
+      console.log('Validating CSS code:', cssCode.substring(0, 100) + '...');
+      
+      // Focused CSS cleaning that maintains most functionality
+      // Only filter out potentially harmful script injections
+      const cleanedCode = cssCode
+        .replace(/<script/gi, '/* script')
+        .replace(/<\/script>/gi, 'script */')
+        .replace(/javascript:/gi, 'invalid:')
+        // Keep most CSS functionality intact
+        .trim();
+        
+      return cleanedCode;
+    } catch (error) {
+      console.warn('CSS validation failed:', error);
+      return '/* CSS validation failed */';
+    }
   };
 
   const generateSrcDoc = () => {
+    // Debug the content to be included
+    console.log('Current content state:', {
+      html: htmlCode?.substring(0, 50) + (htmlCode && htmlCode.length > 50 ? '...' : ''),
+      css: cssCode?.substring(0, 50) + (cssCode && cssCode.length > 50 ? '...' : ''),
+      js: jsCode?.substring(0, 50) + (jsCode && jsCode.length > 50 ? '...' : '')
+    });
+    
     // Validate and clean the code content to prevent syntax errors
-    const safeHtmlCode = htmlCode || '';
+    const safeHtmlCode = (htmlCode || '')
+      .replace(/<script/gi, '&lt;script')  // Disable inline scripts
+      .replace(/<\/script>/gi, '&lt;/script>')
+      .replace(/onerror=/gi, 'data-onerror=')
+      .replace(/onclick=/gi, 'data-onclick=');
+      
     const safeCssCode = validateCSS(cssCode || '');
     const safeJsCode = validateJavaScript(jsCode || '');
     
-    return `<!DOCTYPE html>
+    // Add a placeholder if no content
+    const defaultHtml = !safeHtmlCode.trim() ? 
+      '<div style="text-align:center;padding:20px;color:#666;">No HTML content available</div>' : 
+      safeHtmlCode;
+    
+    const srcDoc = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';">
   <style>
     body { margin: 0; padding: 20px; font-family: system-ui, sans-serif; }
     ${safeCssCode}
   </style>
 </head>
 <body>
-  ${safeHtmlCode}
+  ${defaultHtml}
   <script>
     (function() {
       try {
+        // Console logging wrapper for debugging
+        const originalConsoleLog = console.log;
+        console.log = function() {
+          originalConsoleLog.apply(console, arguments);
+        };
+        
         ${safeJsCode}
       } catch (error) {
         console.error('JavaScript error in preview:', error);
@@ -105,6 +185,8 @@ const LiveUIPreview: React.FC<LiveUIPreviewProps> = ({
   </script>
 </body>
 </html>`;
+
+    return srcDoc;
   };
 
   const handleCodeChange = (type: 'html' | 'css' | 'js', value: string) => {
@@ -112,11 +194,13 @@ const LiveUIPreview: React.FC<LiveUIPreviewProps> = ({
     if (type === 'css') setCssCode(value);
     if (type === 'js') setJsCode(value);
 
-    onCodeChange({
-      html: type === 'html' ? value : htmlCode,
-      css: type === 'css' ? value : cssCode,
-      js: type === 'js' ? value : jsCode
-    });
+    if (onCodeChange) {
+      onCodeChange({
+        html: type === 'html' ? value : htmlCode,
+        css: type === 'css' ? value : cssCode,
+        js: type === 'js' ? value : jsCode
+      });
+    }
   };
 
   const refreshPreview = () => {
@@ -128,13 +212,19 @@ const LiveUIPreview: React.FC<LiveUIPreviewProps> = ({
 
   const getDeviceWidth = () => {
     switch (deviceSize) {
-      case 'mobile': return '375px';
-      case 'tablet': return '768px';
+      case 'mobile': return breakpoints?.mobile || '375px';
+      case 'tablet': return breakpoints?.tablet || '768px';
       case 'desktop': return '100%';
     }
   };
 
   const downloadHTML = () => {
+    // Use the validated code to prevent security issues in the downloaded file
+    const safeCssCode = validateCSS(cssCode);
+    const safeJsCode = validateJavaScript(jsCode);
+    const safeHtmlCode = (htmlCode || '')
+      .replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gi, '<!-- script removed -->');
+      
     const combinedCode = `<!DOCTYPE html>
 <html>
 <head>
@@ -142,13 +232,20 @@ const LiveUIPreview: React.FC<LiveUIPreviewProps> = ({
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Generated Component</title>
   <style>
-    ${cssCode}
+    ${safeCssCode}
   </style>
 </head>
 <body>
-  ${htmlCode}
+  ${safeHtmlCode}
   <script>
-    ${jsCode}
+    // Code generated with Live UI Builder
+    (function() {
+      try {
+        ${safeJsCode}
+      } catch (error) {
+        console.error('JavaScript error:', error);
+      }
+    })();
   </script>
 </body>
 </html>`;

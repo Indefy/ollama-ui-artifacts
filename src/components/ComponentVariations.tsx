@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Shuffle, Copy, Download, Eye } from 'lucide-react';
+import { Shuffle, Copy, Eye } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { CodePayload } from './LiveUIPreview';
@@ -35,9 +35,8 @@ const ComponentVariations: React.FC<ComponentVariationsProps> = ({
     { name: 'Minimalist', description: 'Simple, clean design with minimal elements' },
     { name: 'Retro', description: 'Vintage-inspired design with bold colors' }
   ];
-
   const generateVariations = async () => {
-    if (!basePrompt.trim()) return;
+    if (!basePrompt || basePrompt.trim() === '') return;
 
     setIsGenerating(true);
     const newVariations: Variation[] = variationStyles.map((style, index) => ({
@@ -91,10 +90,9 @@ const ComponentVariations: React.FC<ComponentVariationsProps> = ({
           Generate multiple design variations of your component
         </p>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <Button
+      <CardContent className="space-y-4">        <Button
           onClick={generateVariations}
-          disabled={isGenerating || !basePrompt.trim()}
+          disabled={isGenerating || !basePrompt || basePrompt.trim() === ''}
           className="glass-button text-white w-full"
         >
           <Shuffle size={16} className="mr-2" />

@@ -96,15 +96,15 @@ Return as JSON with this structure:
       }
 
       // Format the optimized code with Prettier
-      const formattedCode = {
-        html: formatCodeWithPrettier(result.optimizedCode.html || code.html, 'html'),
-        css: formatCodeWithPrettier(result.optimizedCode.css || code.css, 'css'),
-        js: formatCodeWithPrettier(result.optimizedCode.js || code.js, 'babel')
-      };
+      // const formattedCode = {
+      //   html: formatCodeWithPrettier(result.optimizedCode.html || code.html, 'html'),
+      //   css: formatCodeWithPrettier(result.optimizedCode.css || code.css, 'css'),
+      //   js: formatCodeWithPrettier(result.optimizedCode.js || code.js, 'babel')
+      // };
 
       return {
         suggestions: Array.isArray(result.suggestions) ? result.suggestions : [],
-        optimizedCode: formattedCode,
+        optimizedCode: result.optimizedCode || code,
         smartName: result.smartName || generateSmartComponentName(code)
       };
       
@@ -124,15 +124,9 @@ Return as JSON with this structure:
       try {
         const result = JSON.parse(jsonStr);
         
-        const formattedCode = {
-          html: formatCodeWithPrettier(result.optimizedCode?.html || code.html, 'html'),
-          css: formatCodeWithPrettier(result.optimizedCode?.css || code.css, 'css'),
-          js: formatCodeWithPrettier(result.optimizedCode?.js || code.js, 'babel')
-        };
-
         return {
           suggestions: Array.isArray(result.suggestions) ? result.suggestions : [],
-          optimizedCode: formattedCode,
+          optimizedCode: result.optimizedCode || code,
           smartName: result.smartName || generateSmartComponentName(code)
         };
         
@@ -150,80 +144,6 @@ Return as JSON with this structure:
       smartName: generateSmartComponentName(code)
     };
   }
-}
-
-export function formatCodeWithPrettier(code: string, parser: 'html' | 'css' | 'babel'): string {
-  try {
-    // Simple formatting rules without external Prettier dependency
-    switch (parser) {
-      case 'html':
-        return formatHTML(code);
-      case 'css':
-        return formatCSS(code);
-      case 'babel':
-        return formatJavaScript(code);
-      default:
-        return code;
-    }
-  } catch (error) {
-    console.warn('Formatting failed, returning original code:', error);
-    return code;
-  }
-}
-
-function formatHTML(html: string): string {
-  if (!html.trim()) return '';
-
-  const formatted = html.trim();
-  let indentLevel = 0;
-  const indentSize = 2;
-  const lines = formatted.split(/>\s*</);
-
-  const result = lines.map((line, index) => {
-    if (index === 0) {
-      line = line + '>';
-    } else if (index === lines.length - 1) {
-      line = '<' + line;
-    } else {
-      line = '<' + line + '>';
-    }
-
-    if (line.includes('</')) {
-      indentLevel = Math.max(0, indentLevel - 1);
-    }
-
-    const indentedLine = ' '.repeat(indentLevel * indentSize) + line.trim();
-
-    if (line.includes('<') && !line.includes('</') && !line.endsWith('/>')) {
-      indentLevel++;
-    }
-
-    return indentedLine;
-  });
-
-  return result.join('\n');
-}
-
-function formatCSS(css: string): string {
-  if (!css.trim()) return '';
-
-  return css
-    .replace(/\s*{\s*/g, ' {\n  ')
-    .replace(/;\s*/g, ';\n  ')
-    .replace(/\s*}\s*/g, '\n}\n\n')
-    .replace(/,\s*/g, ',\n')
-    .trim();
-}
-
-function formatJavaScript(js: string): string {
-  if (!js.trim()) return '';
-
-  return js
-    .replace(/;\s*/g, ';\n')
-    .replace(/{\s*/g, ' {\n  ')
-    .replace(/}\s*/g, '\n}\n')
-    .replace(/,\s*/g, ', ')
-    .trim();
 }
 
 export function generateSmartComponentName(code: { html: string; css: string; js: string }): string {

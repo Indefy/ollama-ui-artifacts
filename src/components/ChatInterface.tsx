@@ -1,13 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Sparkles, Cpu } from 'lucide-react';
-import { Button } from '../components/ui/button';
-import { Textarea } from '../components/ui/textarea';
+import { Button } from './ui/button';
+import { Textarea } from './ui/textarea';
 import { Message, MessageType } from '../types/chatTypes';
-import MessageItem from '../components/MessageItem';
+import MessageItem from './MessageItem';
 import { generateUICode } from '../lib/codeGenerator';
 
 interface ChatInterfaceProps {
-  onGenerateCode: (html: string, css: string, js: string) => void;
+  onCodeGenerate: (html: string, css: string, js: string) => void;
+  selectedModel?: string;
 }
 
 // Lets creat sleek - glass like theme and designed login screen - with dark greenish color scheme with glowing effect
@@ -34,11 +35,11 @@ const INITIAL_MESSAGES: Message[] = [
   },
 ];
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ onGenerateCode }) => {
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ onCodeGenerate, selectedModel: initialModel }) => {
   const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
   const [inputValue, setInputValue] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<string>(AVAILABLE_MODELS[0]);
+  const [selectedModel, setSelectedModel] = useState<string>(initialModel || AVAILABLE_MODELS[0]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -86,7 +87,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onGenerateCode }) => {
         };
 
         setMessages((prev) => [...prev, responseMessage]);
-        onGenerateCode(html, css, js);
+        onCodeGenerate(html, css, js);
       } catch (error) {
         console.error('Error generating UI code:', error);
         const errorMessage: Message = {
@@ -139,7 +140,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onGenerateCode }) => {
             message={message} 
             onCodeSelect={(code) => {
               if (code) {
-                onGenerateCode(code.html, code.css, code.js);
+                onCodeGenerate(code.html, code.css, code.js);
               }
             }}
           />

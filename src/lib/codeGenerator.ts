@@ -1,5 +1,5 @@
 import { CodePayload } from '@/components/LiveUIPreview';
-import { formatCodeWithPrettier } from './codeOptimizer';
+// Removed unused import: formatCodeWithPrettier
 
 // import { analyzeAndOptimizeCode } from './codeOptimizer'; // Temporarily disabled
 
@@ -83,23 +83,34 @@ export function parseAIResponse(rawResponse: string): { html: string; css: strin
   
   // Step 1: Remove any non-JSON content
   const sanitized = rawResponse
-    .replace(/^<think>[\s\S]*?\n/, '') // Remove LLM internal preamble
+    .replace(/<think>[\s\S]*?<\/think>/g, '') // Remove LLM internal thinking sections
     .replace(/^\s*```(json)?/, '') // Remove markdown block start
     .replace(/```\s*$/, '') // Remove markdown block end
-    .replace(/^\s*\{/, '{') // Ensure starts with {
-    .replace(/\}\s*$/, '}') // Ensure ends with }
+    .replace(/^[^{]*/, '') // Remove any text before the first {
+    .replace(/}[^}]*$/, '}') // Remove any text after the last }
     .trim();
 
-  // Step 2: Extract the first JSON block
-  const jsonMatch = sanitized.match(/\{[\s\S]*?\}/);
-  if (!jsonMatch) {
+  // Step 2: Try to find a complete JSON object
+  const jsonRegex = /(\{[\s\S]*?\})/g;
+  const jsonMatches = [...sanitized.matchAll(jsonRegex)];
+  
+  let jsonBlock: string;
+    // If no matches found, try more aggressive extraction
+  if (jsonMatches.length === 0) {
     console.error('[parseAIResponse] No JSON block found in:', sanitized.substring(0, 200));
-    throw new Error('No valid JSON block found in response');
+    const fallbackMatch = sanitized.match(/\{[\s\S]*\}/);
+    
+    if (!fallbackMatch) {
+      throw new Error('No valid JSON block found in response');
+    }
+    
+    console.log('[parseAIResponse] Using fallback JSON extraction');
+    jsonBlock = fallbackMatch[0];
+  } else {
+    // Use the first match by default
+    jsonBlock = jsonMatches[0][0];
   }
-  
-  const jsonBlock = jsonMatch[0];
-  
-  // Step 3: Preprocess JSON to fix common issues
+    // Step 3: Preprocess JSON to fix common issues
   const preprocessed = jsonBlock
     .replace(/\/\/.*$/gm, '') // Remove line comments
     .replace(/\/\*[\s\S]*?\*\//g, '') // Remove block comments
@@ -149,41 +160,45 @@ export function parseAIResponse(rawResponse: string): { html: string; css: strin
   } catch (error) {
     console.error('[parseAIResponse] JSON parse error:', error);
     console.debug('[parseAIResponse] Failed JSON content:', preprocessed.substring(0, 500));
+    
+    // Attempt manual extraction as a last resort
+    try {
+      const htmlMatch = jsonBlock.match(/"html"[^"]*"([^"]+)"/);
+      const cssMatch = jsonBlock.match(/"css"[^"]*"([^"]+)"/);
+      const jsMatch = jsonBlock.match(/"js"[^"]*"([^"]+)"/);
+      
+      if (htmlMatch && cssMatch) {
+        return {
+          html: htmlMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"'),
+          css: cssMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"'),
+          js: jsMatch ? jsMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"') : ''
+        };
+      }
+    } catch (extractError) {
+      console.error('[parseAIResponse] Manual extraction failed:', extractError);
+    }
+    
     throw error;
   }
 }
 
-interface GenerationResult {
-  success: boolean;
-  data?: CodePayload | string;
-  error?: string;
-}
+// Removed unused interface: GenerationResult
 
 export async function generateUICode(
   prompt: string, 
   modelName: string = 'deepseek-r1:latest'
 ): Promise<CodePayload> {
-  const systemPrompt = `You are a UI component generator. Generate clean, modern, responsive HTML, CSS, and JavaScript code based on the user's request.
-
-IMPORTANT: Return ONLY a JSON object with this exact structure:
-{
-  "html": "HTML code here",
-  "css": "CSS code here", 
-  "js": "JavaScript code here"
-}
-
-Requirements:
-- Use modern HTML5 semantic elements
-- Write responsive CSS with flexbox/grid
-- Include proper accessibility attributes
-- Add smooth animations and transitions
-- Use vanilla JavaScript for interactivity
-- Make components mobile-friendly
-- Use modern color schemes and typography
-- Ensure clean, readable code structure`;
-
-  try {
-    const response = await fetch('http://localhost:11434/api/generate', {
+  // Use the advanced system prompt with style guidance
+  const systemPrompt = getAdvancedSystemPrompt(prompt, getStyleGuidance(prompt));  try {
+    // Check if Ollama is available
+    const isOllamaAvailable = await checkOllamaAvailability();
+    if (!isOllamaAvailable) {
+      console.warn('Ollama is not available, using fallback generation');
+      return generateBasicUICode(prompt);
+    }
+    
+    // Use the fetchWithTimeout utility with a 30-second timeout
+    const response = await fetchWithTimeout('http://localhost:11434/api/generate', {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
@@ -198,56 +213,122 @@ Requirements:
           stop: ['</json>', 'Human:', 'Assistant:']
         }
       })
-    });
+    }, 30000);
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
+    }    const data = await response.json();
     let generatedText = data.response || '';
+    
+    // Helper function to clean response text
+    const cleanResponse = (text: string) => {
+      // Remove any <think> sections which are LLM self-reflection
+      const withoutThink = text.replace(/<think>[\s\S]*?<\/think>/g, '');
+      
+      // Remove markdown code blocks
+      const withoutMarkdown = withoutThink
+        .replace(/```json\n?/g, '')
+        .replace(/```\n?/g, '')
+        .trim();
+        
+      return withoutMarkdown;
+    };
+    
+    generatedText = cleanResponse(generatedText);
 
-    // Clean up the response - remove any markdown formatting
-    generatedText = generatedText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
-
-    // Find JSON content
-    const jsonMatch = generatedText.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      console.warn('No JSON found in response:', generatedText);
-      return {
-        html: '<div class="error">Could not generate component. Please try again.</div>',
-        css: '.error { color: red; padding: 20px; text-align: center; }',
-        js: ''
-      };
+    // Find the JSON object in the response
+    const jsonRegex = /(\{[\s\S]*?\})/g;
+    const jsonMatches = [...generatedText.matchAll(jsonRegex)];
+    
+    // Try each potential JSON match
+    for (const match of jsonMatches) {
+      try {
+        const jsonStr = match[0]
+          // Fix common JSON issues
+          .replace(/,(\s*[}\]])/g, '$1') // Remove trailing commas
+          .replace(/([{,])\s*(['"])?([a-zA-Z0-9_]+)(['"])?\s*:/g, '$1"$3":') // Fix unquoted keys
+          .replace(/:\s*'/g, ': "') // Replace single quotes with double quotes for values
+          .replace(/'\s*(,|]|})/g, '"$1') // Replace closing single quotes with double quotes
+          .replace(/\\'/g, "'") // Fix escaped single quotes
+          .replace(/"\s*\+\s*"/g, ''); // Remove string concatenation
+          
+        const parsed = JSON.parse(jsonStr);
+        
+        if (parsed.html !== undefined && parsed.css !== undefined) {
+          return {
+            html: parsed.html || '',
+            css: parsed.css || '',
+            js: parsed.js || ''
+          };
+        }
+      } catch (e) {
+        console.log(`Failed to parse JSON match: ${match[0].substring(0, 100)}...`, e);
+        // Continue to next match
+      }
     }
-
+    
+    // If no valid JSON was found, try to extract sections manually
+    console.warn('No valid JSON found in response, trying manual extraction');
+    
     try {
-      const parsed = JSON.parse(jsonMatch[0]);
-      return {
-        html: parsed.html || '',
-        css: parsed.css || '',
-        js: parsed.js || ''
-      };
-    } catch (parseError) {
-      console.error('JSON parse error:', parseError);
-      console.log('Raw response:', generatedText);
-
       // Fallback: try to extract code sections manually
-      const htmlMatch = generatedText.match(/"html":\s*"([^"]*(?:\\.[^"]*)*)"/);
-      const cssMatch = generatedText.match(/"css":\s*"([^"]*(?:\\.[^"]*)*)"/);
-      const jsMatch = generatedText.match(/"js":\s*"([^"]*(?:\\.[^"]*)*)"/);
+      const htmlMatch = generatedText.match(/"html"\s*:\s*"([^"]*(?:\\.[^"]*)*)"/) || 
+                        generatedText.match(/"html"\s*:\s*'([^']*(?:\\.[^']*)*)'/) ||
+                        generatedText.match(/html\s*:\s*['"]([^'"]*(?:\\.[^'"]*)*)['"`]/);
+                        
+      const cssMatch = generatedText.match(/"css"\s*:\s*"([^"]*(?:\\.[^"]*)*)"/) || 
+                       generatedText.match(/"css"\s*:\s*'([^']*(?:\\.[^']*)*)'/) ||
+                       generatedText.match(/css\s*:\s*['"]([^'"]*(?:\\.[^'"]*)*)['"`]/);
+                       
+      const jsMatch = generatedText.match(/"js"\s*:\s*"([^"]*(?:\\.[^"]*)*)"/) || 
+                     generatedText.match(/"js"\s*:\s*'([^']*(?:\\.[^']*)*)'/) ||
+                     generatedText.match(/js\s*:\s*['"]([^'"]*(?:\\.[^'"]*)*)['"`]/);
 
-      return {
-        html: htmlMatch ? htmlMatch[1].replace(/\\"/g, '"').replace(/\\n/g, '\n') : '<div>Error parsing HTML</div>',
-        css: cssMatch ? cssMatch[1].replace(/\\"/g, '"').replace(/\\n/g, '\n') : '',
-        js: jsMatch ? jsMatch[1].replace(/\\"/g, '"').replace(/\\n/g, '\n') : ''
-      };
+      console.log(`Manual extraction results: HTML=${!!htmlMatch}, CSS=${!!cssMatch}, JS=${!!jsMatch}`);
+
+      if (htmlMatch || cssMatch) {
+        return {
+          html: htmlMatch ? htmlMatch[1].replace(/\\"/g, '"').replace(/\\n/g, '\n') : '<div>Error parsing HTML</div>',
+          css: cssMatch ? cssMatch[1].replace(/\\"/g, '"').replace(/\\n/g, '\n') : '',
+          js: jsMatch ? jsMatch[1].replace(/\\"/g, '"').replace(/\\n/g, '\n') : ''
+        };
+      }
+    } catch (extractError) {
+      console.error('Error during manual extraction:', extractError);
     }
-  } catch (error) {
-    console.error('Error generating code:', error);
+    
+    // If all attempts fail, return a fallback component
+    console.error('All parsing attempts failed, using fallback UI');
+    return {
+      html: '<div class="error">Could not generate component. Please try again.</div>',
+      css: '.error { color: red; padding: 20px; text-align: center; border: 1px solid red; border-radius: 4px; background-color: #fff1f1; }',
+      js: ''
+    };  } catch (error) {
+    // Enhanced error handling with specific messages for different error types
+    if (error instanceof Error) {
+      if (error.name === 'AbortError' || error.message.includes('timed out')) {
+        console.error('[generateUICode] Request timed out:', error.message);
+        return {
+          html: '<div class="error">Request timed out. Ollama is taking too long to respond. Please try again or use a different model.</div>',
+          css: '.error { color: #d32f2f; padding: 20px; text-align: center; border: 1px solid #d32f2f; border-radius: 4px; background-color: #ffebee; font-family: system-ui, sans-serif; }',
+          js: ''
+        };
+      } else if (error.message.includes('fetch')) {
+        console.error('[generateUICode] Network error:', error.message);
+        return {
+          html: '<div class="error">Network error. Please make sure Ollama is running and accessible.</div>',
+          css: '.error { color: #d32f2f; padding: 20px; text-align: center; border: 1px solid #d32f2f; border-radius: 4px; background-color: #ffebee; font-family: system-ui, sans-serif; }',
+          js: ''
+        };
+      }
+      console.error('[generateUICode] Error:', error.name, error.message);
+    } else {
+      console.error('[generateUICode] Unknown error:', error);
+    }
+    
     return {
       html: '<div class="error">Failed to generate component. Please check your connection and try again.</div>',
-      css: '.error { color: red; padding: 20px; text-align: center; border: 1px solid red; border-radius: 4px; }',
+      css: '.error { color: #d32f2f; padding: 20px; text-align: center; border: 1px solid #d32f2f; border-radius: 4px; background-color: #ffebee; font-family: system-ui, sans-serif; }',
       js: ''
     };
   }
@@ -430,7 +511,14 @@ export function generateBasicUICode(prompt: string): CodePayload {
 .send-button:hover {
   background: #004400;
   box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
-}`,
+}
+
+@keyframes typing {
+  from { text-shadow: 0 0 3px #00ff00; }
+  to { text-shadow: 0 0 8px #00ff00; }
+}
+
+    `,
       js: `document.addEventListener('DOMContentLoaded', function() {
   const input = document.querySelector('.terminal-input');
   const sendBtn = document.querySelector('.send-button');
@@ -572,3 +660,88 @@ export function generateBasicUICode(prompt: string): CodePayload {
 });`,
   };
 }
+
+/**
+ * Check if Ollama is available
+ */
+/**
+ * Utility function for fetching with timeout
+ * Enhanced to properly handle both external signals and timeout
+ * @param url URL to fetch
+ * @param options Fetch options
+ * @param timeoutMs Timeout in milliseconds
+ * @returns Response or throws error
+ */
+async function fetchWithTimeout(
+  url: string, 
+  options: RequestInit = {}, 
+  timeoutMs: number = 30000
+): Promise<Response> {
+  // Create our own abort controller for the timeout
+  const timeoutController = new AbortController();
+  
+  // Get any existing signal from options
+  const existingSignal = options.signal;
+  
+  // Set up the timeout
+  const timeoutId = setTimeout(() => {
+    timeoutController.abort(new DOMException('Request timed out', 'TimeoutError'));
+  }, timeoutMs);
+  
+  try {
+  // Handle the case where there's an existing signal
+    if (existingSignal && existingSignal.aborted) {
+      // If the existing signal is already aborted, we don't need to do anything else
+      throw new DOMException('The operation was aborted', 'AbortError');
+    }
+    
+    // If there's an existing signal, set up a listener to abort our controller if it aborts
+    if (existingSignal) {
+      existingSignal.addEventListener('abort', () => {
+        timeoutController.abort(existingSignal.reason);
+        clearTimeout(timeoutId);
+      }, { once: true });
+    }
+    
+    // Use our controller's signal
+    const signal = timeoutController.signal;
+    
+    // Combine the original options with our signal
+    const fetchOptions: RequestInit = {
+      ...options,
+      signal
+    };
+    
+    // Return the fetch with our combined signal
+    return await fetch(url, fetchOptions);
+    
+  } finally {
+    // Always clear the timeout to prevent memory leaks
+    clearTimeout(timeoutId);
+  }
+}
+
+/**
+ * Check if Ollama is available
+ * Enhanced with better error categorization and logging
+ */
+async function checkOllamaAvailability(): Promise<boolean> {
+  try {
+    const healthCheck = await fetchWithTimeout('http://localhost:11434', { method: 'HEAD' }, 3000);
+    return healthCheck.ok;
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.name === 'AbortError' || error.message.includes('timed out')) {
+        console.error('Ollama health check timed out. Is Ollama running but overloaded?');
+      } else if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+        console.error('Ollama connection failed. Is the service running at http://localhost:11434?');
+      } else {
+        console.error(`Ollama health check failed with ${error.name}: ${error.message}`);
+      }
+    } else {
+      console.error('Ollama health check failed with an unknown error:', String(error));
+    }
+    return false;
+  }
+}
+
